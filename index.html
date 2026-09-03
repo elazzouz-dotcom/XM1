@@ -1,22 +1,215 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>XM1 — الموقع يعمل</title>
-    <style>
-      body{font-family: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f7f9fc;color:#0b1220}
-      .card{background:#fff;padding:24px 32px;border-radius:12px;box-shadow:0 6px 24px rgba(11,18,32,0.08);max-width:720px;text-align:center}
-      h1{margin:0 0 8px;font-size:28px}
-      p{margin:0;color:#334155}
-      footer{margin-top:16px;font-size:13px;color:#6b7280}
-    </style>
-  </head>
-  <body>
-    <main class="card">
-      <h1>XM1 — الموقع يعمل</h1>
-      <p>مرحبًا! هذه صفحة افتراضية للمشروع "XM1". يمكنك تحديث هذه الصفحة بمحتوى المشروع.</p>
-      <footer>تم إنشاؤها تلقائيًا بواسطة GitHub Copilot</footer>
-    </main>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XM1 - المشروع الرائد</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+                <span>XM1</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">الرئيسية</a></li>
+                <li><a href="#features">المميزات</a></li>
+                <li><a href="#about">عننا</a></li>
+                <li><a href="#contact">التواصل</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>مرحباً بك في XM1</h1>
+                <p>منصة احترافية للمشاريع الحديثة</p>
+                <button class="btn btn-primary" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})">
+                    اكتشف المزيد
+                </button>
+            </div>
+            <div class="hero-image">
+                <div class="floating-box">
+                    <i class="fas fa-star"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <h2>المميزات الرئيسية</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>سريع جداً</h3>
+                <p>أداء عالي وسرعة استجابة فورية لجميع العمليات</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>آمن وموثوق</h3>
+                <p>تشفير عالي المستوى وحماية كاملة للبيانات</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>متوافق مع الجوال</h3>
+                <p>يعمل بكفاءة على جميع الأجهزة والشاشات</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>دعم العملاء</h3>
+                <p>فريق دعم متاح 24/7 لمساعدتك</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h3>قابل للتخصيص</h3>
+                <p>واجهة مرنة قابلة للتكيف مع احتياجاتك</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>تحليلات متقدمة</h3>
+                <p>رؤى عميقة وتقارير تفصيلية عن الأداء</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2>عن المشروع</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>ما هي XM1؟</h3>
+                    <p>
+                        XM1 هي منصة حديثة مصممة لتوفير حلول متكاملة للمشاريع الرقمية.
+                        تجمع بين التكنولوجيا المتقدمة والواجهة سهلة الاستخدام.
+                    </p>
+                    <p>
+                        نركز على الابتكار والجودة والموثوقية في كل ما نقدمه.
+                    </p>
+                    <div class="stats">
+                        <div class="stat">
+                            <h4>100+</h4>
+                            <p>مشروع ناجح</p>
+                        </div>
+                        <div class="stat">
+                            <h4>50K+</h4>
+                            <p>مستخدم نشط</p>
+                        </div>
+                        <div class="stat">
+                            <h4>99.9%</h4>
+                            <p>وقت التشغيل</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>تواصل معنا</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>البريد الإلكتروني</h4>
+                            <p>elazzouz4@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h4>الهاتف</h4>
+                            <p>+966 XXX XXX XXXX</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h4>الموقع</h4>
+                            <p>المملكة العربية السعودية</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form class="contact-form">
+                    <input type="text" placeholder="اسمك" required>
+                    <input type="email" placeholder="بريدك الإلكتروني" required>
+                    <textarea placeholder="رسالتك" rows="5" required></textarea>
+                    <button type="submit" class="btn btn-primary">إرسال الرسالة</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>XM1</h4>
+                    <p>منصة رائدة في عالم التكنولوجيا الحديثة</p>
+                </div>
+                <div class="footer-section">
+                    <h4>الروابط السريعة</h4>
+                    <ul>
+                        <li><a href="#home">الرئيسية</a></li>
+                        <li><a href="#features">المميزات</a></li>
+                        <li><a href="#about">عننا</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>تابعنا</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 XM1. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
 </html>
