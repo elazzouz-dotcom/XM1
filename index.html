@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة MXAI - الذكاء الاصطناعي المتقدم</title>
-    <!-- روابط التنسيق والخطوط -->
+    <title>MXAI Cloud - المنصة الذكية المتكاملة</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -12,77 +11,81 @@
 <body>
 
     <div class="app-container">
-        <!-- الشريط الجانبي (Sidebar) -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fa-solid fa-brain"></i> MXAI Studio</h2>
-                <button class="new-chat-btn" id="newChatBtn">
-                    <i class="fa-solid fa-plus"></i> محادثة جديدة
-                </button>
+                <h2><i class="fa-solid fa-cloud-bolt"></i> MXAI Studio</h2>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#messages-section" class="nav-item active"><i class="fa-solid fa-comments"></i> المراسلات والدردشة</a>
+                <a href="#ai-collab-section" class="nav-item"><i class="fa-solid fa-network-wired"></i> تواصل الـ AI المشترك</a>
+                <a href="#social-section" class="nav-item"><i class="fa-solid fa-share-nodes"></i> التواصل الاجتماعي</a>
+                <a href="#settings-section" class="nav-item"><i class="fa-solid fa-sliders"></i> لوحة الإعدادات</a>
             </div>
 
-            <div class="conversations-list" id="conversationsList">
-                <!-- يتم حقن المحادثات السابقة هنا برمجياً -->
-                <div class="conversation-item active">
-                    <i class="fa-regular fa-message"></i>
-                    <span>محادثة افتراضية أولى</span>
-                </div>
-            </div>
-
-            <div class="sidebar-footer">
-                <div class="user-profile">
-                    <i class="fa-solid fa-user-circle"></i>
-                    <span>حساب المستخدم</span>
-                </div>
+            <div class="sidebar-footer" style="font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); pt-15;">
+                <p>الحالة: متصل وآمن <i class="fa-solid fa-circle" style="color: #22c55e; font-size: 0.6rem;"></i></p>
             </div>
         </aside>
 
-        <!-- منطقة الدردشة الرئيسية (Main Chat Area) -->
-        <main class="chat-main">
-            <!-- شريط علوي -->
-            <header class="chat-header">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <div class="model-selector-container">
-                    <label for="modelSelect"><i class="fa-solid fa-microchip"></i> النموذج:</label>
-                    <select id="modelSelect" class="model-select">
-                        <option value="gpt-4">GPT-4 Turbo (متقدم)</option>
-                        <option value="claude-3">Claude 3 Opus (تحليلي)</option>
-                        <option value="gemini-pro">Gemini Pro (متعدد الوسائط)</option>
-                    </select>
-                </div>
-                <div class="header-actions">
-                    <button title="إعدادات متقدمة"><i class="fa-solid fa-gear"></i></button>
-                </div>
+        <main class="main-content">
+            <header class="top-header">
+                <h1>لوحة التحكم التقنية المتكاملة</h1>
+                <span class="badge">إصدار الشركات v2.5</span>
             </header>
 
-            <!-- صندوق عرض الرسائل -->
-            <div class="chat-box" id="chatBox">
-                <div class="bot-message message">
-                    <div class="message-avatar"><i class="fa-solid fa-robot"></i></div>
-                    <div class="message-content">
-                        مرحباً بك في منصة <strong>MXAI</strong> الذكية. كيف يمكنني مساعدتك اليوم؟
+            <section id="messages-section" class="section-card">
+                <h3><i class="fa-solid fa-comments"></i> قسم المراسلات والاستفسارات الذكية</h3>
+                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">اطرح أسئلتك ونقاشاتك وسيقوم النظام بتوليد الإجابات تدريجياً وبشكل طولي مستمر.</p>
+                
+                <div id="feedBox" class="feed-box">
+                    <div class="feed-message ai">
+                        <strong>نظام MXAI:</strong> أهلاً بك في بيئة العمل الطولية الجديدة. يمكنك كتابة أي استفسار برمجي أو تقني وسيتم تسجيله والرد عليه فوراً.
                     </div>
                 </div>
-            </div>
 
-            <!-- حقل الإدخال والتحكم -->
-            <div class="chat-input-container">
-                <div class="input-wrapper">
-                    <textarea id="userInput" placeholder="اكتب رسالتك أو استفسارك هنا..." rows="1"></textarea>
-                    <div class="input-actions">
-                        <button type="button" title="إرفاق ملف"><i class="fa-solid fa-paperclip"></i></button>
-                        <button type="button" title="تسجيل صوتي"><i class="fa-solid fa-microphone"></i></button>
-                        <button id="sendBtn" type="button" title="إرسال"><i class="fa-solid fa-paper-plane"></i></button>
-                    </div>
+                <div class="input-container">
+                    <textarea id="userInput" placeholder="اكتب استفسارك التقني هنا..."></textarea>
+                    <button id="sendBtn" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
                 </div>
-                <div class="disclaimer">منصة MXAI للذكاء الاصطناعي - قد تتولد معلومات غير دقيقة أحياناً، يرجى التحقق من النتائج المهمة.</div>
-            </div>
+            </section>
+
+            <section id="ai-collab-section" class="section-card">
+                <h3><i class="fa-solid fa-network-wired"></i> قسم تواصل النماذج (AI Collaboration)</h3>
+                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">شاهد كيف تتواصل نماذج الذكاء الاصطناعي مع بعضها لمعالجة المهام البرمجية وتحليل الأكواد.</p>
+                
+                <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); font-family: monospace; font-size: 0.85rem; line-height: 1.7;">
+                    <span style="color: #f38020;">[Model-GPT4]:</span> تم استلام هيكل المشروع وبدء الفحص البرمجي...<br>
+                    <span style="color: #38bdf8;">[Model-Claude]:</span> تم تحليل ملفات CSS وربطها بنجاح مع السكربتات الطولية.<br>
+                    <span style="color: #22c55e;">[System-MXAI]:</span> النماذج متزامنة وتعمل بكفاءة 100% بدون أي انقطاع.
+                </div>
+            </section>
+
+            <section id="social-section" class="section-card">
+                <h3><i class="fa-solid fa-share-nodes"></i> شبكة التواصل الاجتماعي والمجتمع التقني</h3>
+                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">تواصل مع مجتمع المطورين وشارك مشاريعك التقنية المفتوحة.</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="#" class="badge" style="color: var(--text-main); text-decoration: none;"><i class="fa-brands fa-github"></i> مستودع GitHub التقني</a>
+                    <a href="#" class="badge" style="color: var(--text-main); text-decoration: none;"><i class="fa-brands fa-discord"></i> مجتمع المطورين (Discord)</a>
+                    <a href="#" class="badge" style="color: var(--text-main); text-decoration: none;"><i class="fa-brands fa-x-twitter"></i> تحديثات المنصة (X)</a>
+                </div>
+            </section>
+
+            <section id="settings-section" class="section-card">
+                <h3><i class="fa-solid fa-sliders"></i> لوحة الإعدادات والتحكم</h3>
+                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">تخصيص نماذج المعالجة، الأمان، وتفضيلات العرض الطولي.</p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem;">
+                        <input type="checkbox" checked style="accent-color: var(--accent-color);"> تفعيل الردود التلقائية المتقدمة
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem;">
+                        <input type="checkbox" checked style="accent-color: var(--accent-color);"> الحفظ التلقائي لسجل المحادثات الطولية
+                    </label>
+                </div>
+            </section>
         </main>
     </div>
 
-    <!-- ملف السكريبت الخارجي -->
     <script src="script.js"></script>
 </body>
 </html>
