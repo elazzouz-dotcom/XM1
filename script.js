@@ -2,7 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('sendBtn');
     const userInput = document.getElementById('userInput');
     const chatBox = document.getElementById('chatBox');
-    const modelSelect = document.getElementById('modelSelect');
+
+    // مفتاح API مجاني (يمكنك استبداله بمفتاحك الخاص لاحقاً)
+    const API_KEY = "YOUR_GEMINI_API_KEY"; 
 
     if (sendBtn) {
         sendBtn.addEventListener('click', handleUserMessage);
@@ -17,18 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function handleUserMessage() {
+    async function handleUserMessage() {
         const text = userInput.value.trim();
         if (!text) return;
 
-        const selectedModel = modelSelect ? modelSelect.options[modelSelect.selectedIndex].text : 'MXAI Model';
-
-        // إضافة رسالة المستخدم للدردشة
         appendMessage(text, 'user');
         userInput.value = '';
         
-        // محاكاة رد الذكاء الاصطناعي بناءً على النموذج المحدد
-        showTypingIndicator(selectedModel);
+        const botMsgId = 'bot-' + Date.now();
+        appendLoadingMessage(botMsgId);
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: text }] }]
+                })
+            });
+
+            const data = await response.json();
+            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "عذراً، لم أتمكن من معالجة الطلب.";
+            
+            updateBotMessage(botMsgId, reply);
+        } catch (error) {
+            updateBotMessage(botMsgId, "حدث خطأ في الاتصال بخدمة الذكاء الاصطناعي.");
+        }
     }
 
     function appendMessage(text, sender) {
@@ -37,58 +53,37 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (sender === 'user') {
             messageDiv.style.alignSelf = 'flex-end';
-            messageDiv.innerHTML = `
-                <div class="message-content" style="background-color: #0284c7; color: white; padding: 12px 16px; border-radius: 12px; max-width: 100%;">
-                    ${escapeHtml(text)}
-                </div>
-            `;
+            messageDiv.innerHTML = `<div class="message-content" style="background-color: #0284c7; color: white; padding: 12px 16px; border-radius: 12px;">${escapeHtml(text)}</div>`;
         } else {
             messageDiv.classList.add('bot-message');
             messageDiv.style.alignSelf = 'flex-start';
-            messageDiv.innerHTML = `
-                <div class="message-avatar"><i class="fa-solid fa-robot"></i></div>
-                <div class="message-content">
-                    ${text}
-                </div>
-            `;
+            messageDiv.innerHTML = `<div class="message-avatar"><i class="fa-solid fa-robot"></i></div><div class="message-content">${text}</div>`;
         }
         
         chatBox.appendChild(messageDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function showTypingIndicator(modelName) {
-        const typingId = 'typing-' + Date.now();
+    function appendLoadingMessage(id) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot-message');
-        messageDiv.id = typingId;
+        messageDiv.id = id;
         messageDiv.style.alignSelf = 'flex-start';
-        messageDiv.innerHTML = `
-            <div class="message-avatar"><i class="fa-solid fa-robot"></i></div>
-            <div class="message-content" style="color: #94a3b8;">
-                جاري التوليد باستخدام ${modelName}...
-            </div>
-        `;
+        messageDiv.innerHTML = `<div class="message-avatar"><i class="fa-solid fa-robot"></i></div><div class="message-content" style="color: #94a3b8;">جاري التفكير...</div>`;
         chatBox.appendChild(messageDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-        setTimeout(() => {
-            const typingElement = document.getElementById(typingId);
-            if (typingElement) {
-                typingElement.remove();
-            }
-            appendMessage(`أهلاً بك. أنا نموذج الذكاء الاصطناعي في منصة <strong>MXAI</strong>. لقد تلقيت استفسارك بنجاح وأنا هنا لمساعدتك بكفاءة عالية!`, 'bot');
-        }, 1200);
+    function updateBotMessage(id, text) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.querySelector('.message-content').innerHTML = escapeHtml(text).replace(/\n/g, '<br>');
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     function escapeHtml(text) {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
-        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, (m) => map[m]);
     }
 });
