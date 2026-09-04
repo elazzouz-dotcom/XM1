@@ -221,3 +221,64 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('XM1 Website Loaded Successfully! 🚀');
+const aiNodes = [
+    "192.168.1.10", "10.0.0.5", "172.16.0.25", "192.168.100.50", "10.10.10.10",
+    "172.20.10.5", "192.168.0.100", "10.50.20.1", "172.30.5.15", "192.168.2.20"
+];
+
+async function sendMessage() {
+    const inputField = document.getElementById('user-input');
+    const chatBox = document.getElementById('chat-box');
+    const message = inputField.value.trim();
+    if (message === "") return;
+
+    appendMessage('user-message', message);
+    inputField.value = '';
+
+    const loadingId = 'loading-' + Date.now();
+    appendMessage('bot-message', 'جاري معالجة الطلب عبر شبكة العقد الذكية...', loadingId);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const selectedIP = aiNodes[Math.floor(Math.random() * aiNodes.length)];
+    console.log("Connected to AI Node IP:", selectedIP);
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer YOUR_API_KEY_HERE'
+            },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo",
+                messages: [{role: "user", content: message}]
+            })
+        });
+        const data = await response.json();
+        const reply = data.choices[0].message.content;
+
+        document.getElementById(loadingId).remove();
+        appendMessage('bot-message', reply);
+    } catch (error) {
+        document.getElementById(loadingId).remove();
+        appendMessage('bot-message', 'عذراً، حدث خطأ في الاتصال بالخادم الذكي.');
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function appendMessage(className, text, id = null) {
+    const chatBox = document.getElementById('chat-box');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${className}`;
+    if (id) messageDiv.id = id;
+    messageDiv.innerText = text;
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
