@@ -1,0 +1,256 @@
+:root {
+    --bg-primary: #0b0f19;
+    --bg-secondary: #111827;
+    --bg-card: #1f2937;
+    --border-color: #374151;
+    --accent-color: #f38020; /* طابع برتقالي تقني يشبه Cloudflare */
+    --accent-hover: #e06d12;
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    direction: rtl;
+    text-align: right;
+}
+
+.app-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+/* القائمة الجانبية بطابع لوحة تحكم Cloudflare */
+.sidebar {
+    width: 280px;
+    background-color: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px;
+}
+
+.sidebar-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-main);
+}
+
+.sidebar-header h2 i {
+    color: var(--accent-color);
+}
+
+.new-chat-btn {
+    width: 100%;
+    padding: 10px 16px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.new-chat-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.conversations-list {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+.conversation-item {
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.conversation-item.active, .conversation-item:hover {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+}
+
+/* منطقة الدردشة الرئيسية */
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-primary);
+}
+
+.chat-header {
+    height: 64px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background-color: var(--bg-secondary);
+}
+
+.model-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.model-select {
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.chat-box {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.message {
+    display: flex;
+    gap: 14px;
+    max-width: 75%;
+    animation: fadeIn 0.25s ease;
+}
+
+.bot-message {
+    align-self: flex-start;
+}
+
+.user-message {
+    align-self: flex-end;
+}
+
+.message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-color);
+    font-size: 0.9rem;
+}
+
+.message-content {
+    background-color: var(--bg-secondary);
+    padding: 14px 18px;
+    border-radius: 8px;
+    line-height: 1.6;
+    border: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.user-message .message-content {
+    background-color: var(--bg-card);
+    border-color: #4b5563;
+}
+
+/* صندوق الإدخال التقني */
+.chat-input-container {
+    padding: 20px 24px;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    gap: 12px;
+    transition: border-color 0.2s ease;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--accent-color);
+}
+
+.input-wrapper textarea {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    font-family: 'Cairo', sans-serif;
+    resize: none;
+    outline: none;
+    max-height: 120px;
+    font-size: 0.95rem;
+}
+
+.input-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.input-actions button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: color 0.2s ease;
+}
+
+.input-actions button:hover {
+    color: var(--accent-color);
+}
+
+.disclaimer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 12px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
