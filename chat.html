@@ -669,9 +669,13 @@
             return currentConversation;
         }
 
+        function newId() {
+            return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
+
         function createConversation() {
             return {
-                id: Date.now(),
+                id: newId(),
                 title: `محادثة ${new Date().toLocaleDateString('ar-SA')}`,
                 messages: [],
                 createdAt: new Date().toISOString()
@@ -679,7 +683,7 @@
         }
 
         function recordMessage(conversation, text, sender) {
-            const entry = { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, text, sender, time: new Date().toISOString() };
+            const entry = { id: newId(), text, sender, time: new Date().toISOString() };
             conversation.messages.push(entry);
             saveConversations();
             updateStats();
@@ -726,8 +730,17 @@
             document.getElementById('conversationCount').textContent = conversations.length;
         }
 
-        // Merge with whatever is in storage so a second tab cannot be overwritten
+        // Merge with whatever is in storage so a second tab cannot be overwritten.
+        // The read-merge-write runs under a web lock so concurrent tabs serialize.
         function saveConversations() {
+            if (navigator.locks) {
+                navigator.locks.request(STORAGE_KEY, persistConversations);
+            } else {
+                persistConversations();
+            }
+        }
+
+        function persistConversations() {
             conversations = mergeConversations(readStoredConversations(), conversations);
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
