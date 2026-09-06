@@ -527,6 +527,8 @@
         let currentModel = null;
 
         const STORAGE_KEY = 'conversations';
+        const TAB_KEY_PREFIX = `${STORAGE_KEY}:tab:`;
+        const TAB_KEY = TAB_KEY_PREFIX + newId();
 
         // Ids repeat across providers (e.g. llama-2-70b), so options are keyed by provider too
         function modelKey(model) {
@@ -730,38 +732,64 @@
             document.getElementById('conversationCount').textContent = conversations.length;
         }
 
-        // Merge with whatever is in storage so a second tab cannot be overwritten.
-        // The read-merge-write runs under a web lock so concurrent tabs serialize.
+        // Merge every tab's record into the shared key. The read-merge-write runs
+        // under a web lock so concurrent tabs serialize.
         function saveConversations() {
             if (navigator.locks) {
-                navigator.locks.request(STORAGE_KEY, persistConversations);
+                navigator.locks.request(STORAGE_KEY, compactConversations);
             } else {
-                persistConversations();
+                compactConversations();
             }
         }
 
-        // A queued save can be dropped when the document goes away, so flush directly on teardown
-        window.addEventListener('pagehide', persistConversations);
+        // Teardown cannot wait for the lock, so it writes this tab's own key instead:
+        // one atomic write no other tab touches. The next locked save folds it back in.
+        window.addEventListener('pagehide', persistTabConversations);
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') persistConversations();
+            if (document.visibilityState === 'hidden') persistTabConversations();
         });
 
-        function persistConversations() {
+        function persistTabConversations() {
+            writeStorage(TAB_KEY, conversations);
+        }
+
+        function compactConversations() {
             conversations = mergeConversations(readStoredConversations(), conversations);
+            if (writeStorage(STORAGE_KEY, conversations)) {
+                tabKeys().forEach(key => localStorage.removeItem(key));
+            }
+        }
+
+        function writeStorage(key, value) {
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
             } catch (e) {
                 console.warn('تعذر حفظ المحادثات محلياً', e);
+                return false;
             }
+        }
+
+        function tabKeys() {
+            return Object.keys(localStorage).filter(key => key.startsWith(TAB_KEY_PREFIX));
         }
 
         function readStoredConversations() {
-            const saved = localStorage.getItem(STORAGE_KEY);
+            return [STORAGE_KEY, ...tabKeys()].reduce(
+                (merged, key) => mergeConversations(readStorage(key), merged),
+                []
+            );
+        }
+
+        function readStorage(key) {
+            const saved = localStorage.getItem(key);
             if (!saved) return [];
             try {
                 const parsed = JSON.parse(saved);
                 if (!Array.isArray(parsed)) return [];
-                return parsed.map(conv => ({ ...conv, messages: Array.isArray(conv.messages) ? conv.messages : [] }));
+                return parsed
+                    .filter(conv => conv && typeof conv === 'object' && conv.id)
+                    .map(conv => ({ ...conv, messages: Array.isArray(conv.messages) ? conv.messages : [] }));
             } catch (e) {
                 return [];
             }
@@ -857,7 +885,7 @@
 
         // Pick up conversations written by other tabs
         window.addEventListener('storage', (e) => {
-            if (e.key !== STORAGE_KEY) return;
+            if (e.key !== STORAGE_KEY && !e.key?.startsWith(TAB_KEY_PREFIX)) return;
             conversations = mergeConversations(readStoredConversations(), conversations);
             currentConversation = conversations.find(c => c.id === currentConversation?.id) || currentConversation;
             renderConversation(currentConversation);
