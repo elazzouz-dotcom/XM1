@@ -754,10 +754,17 @@
         }
 
         function compactConversations() {
-            conversations = mergeConversations(readStoredConversations(), conversations);
-            if (writeStorage(STORAGE_KEY, conversations)) {
-                tabKeys().forEach(key => localStorage.removeItem(key));
-            }
+            const snapshots = tabKeys().map(key => ({ key, raw: localStorage.getItem(key) }));
+            conversations = [localStorage.getItem(STORAGE_KEY), ...snapshots.map(s => s.raw)].reduce(
+                (merged, raw) => mergeConversations(parseConversations(raw), merged),
+                conversations
+            );
+            if (!writeStorage(STORAGE_KEY, conversations)) return;
+            // Only reclaim a snapshot that is still byte-identical to the one just folded in;
+            // a tab that wrote its key during compaction keeps it for the next pass
+            snapshots.forEach(({ key, raw }) => {
+                if (localStorage.getItem(key) === raw) localStorage.removeItem(key);
+            });
         }
 
         function writeStorage(key, value) {
@@ -782,7 +789,10 @@
         }
 
         function readStorage(key) {
-            const saved = localStorage.getItem(key);
+            return parseConversations(localStorage.getItem(key));
+        }
+
+        function parseConversations(saved) {
             if (!saved) return [];
             try {
                 const parsed = JSON.parse(saved);
