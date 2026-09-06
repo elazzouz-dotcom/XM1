@@ -740,6 +740,12 @@
             }
         }
 
+        // A queued save can be dropped when the document goes away, so flush directly on teardown
+        window.addEventListener('pagehide', persistConversations);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') persistConversations();
+        });
+
         function persistConversations() {
             conversations = mergeConversations(readStoredConversations(), conversations);
             try {
