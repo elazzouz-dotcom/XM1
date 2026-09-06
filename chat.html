@@ -525,8 +525,18 @@
         let conversations = [];
         let currentConversation = null;
         let currentModel = null;
-        let messageCount = 0;
-        let conversationCount = 0;
+
+        const WELCOME_HTML = `
+            <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: center; align-items: center; height: 100%; color: #94a3b8;">
+                <i class="fas fa-robot" style="font-size: 3rem; color: var(--primary);"></i>
+                <p>مرحباً! اختر نموذج ذكاء اصطناعي وابدأ المحادثة</p>
+            </div>
+        `;
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, (m) => map[m]);
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -570,10 +580,10 @@
                 models.forEach(model => {
                     const modelEl = document.createElement('div');
                     modelEl.className = 'model-item';
-                    modelEl.onclick = () => selectModel(model);
+                    modelEl.onclick = () => selectModel(model, modelEl);
                     modelEl.innerHTML = `
-                        <div class="model-name">${model.name}</div>
-                        <div class="model-category">${model.category} • ${model.tokens} tokens</div>
+                        <div class="model-name">${escapeHtml(model.name)}</div>
+                        <div class="model-category">${escapeHtml(model.category)} • ${escapeHtml(model.tokens)} tokens</div>
                     `;
                     providerGroup.appendChild(modelEl);
                 });
@@ -583,17 +593,18 @@
         }
 
         // Select Model
-        function selectModel(model) {
+        function selectModel(model, sourceEl) {
             currentModel = model;
             document.getElementById('currentModel').textContent = model.name;
             document.getElementById('chatTitle').textContent = `محادثة مع ${model.name}`;
             document.getElementById('chatSubtitle').textContent = `${model.category} • ${model.provider}`;
-            
+            document.getElementById('modelSelect').value = model.id;
+
             // Update active state
             document.querySelectorAll('.model-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.target.closest('.model-item')?.classList.add('active');
+            sourceEl?.classList.add('active');
         }
 
         // Change Model from dropdown
@@ -606,7 +617,11 @@
                 if (model) foundModel = model;
             });
 
-            if (foundModel) selectModel(foundModel);
+            if (foundModel) {
+                const modelEls = Array.from(document.querySelectorAll('.model-item'));
+                const sourceEl = modelEls.find(el => el.querySelector('.model-name')?.textContent === foundModel.name);
+                selectModel(foundModel, sourceEl);
+            }
         }
 
         // Send Message
@@ -621,41 +636,92 @@
 
             if (!message) return;
 
-            // Add user message to chat
+            const conversation = ensureConversation();
+            const responseModel = currentModel;
+
             addMessage(message, 'user');
             input.value = '';
-            messageCount++;
 
             // Simulate AI response
             setTimeout(() => {
-                const aiResponse = generateAIResponse(message, currentModel);
-                addMessage(aiResponse, 'assistant');
+                const aiResponse = generateAIResponse(message, responseModel);
+                if (currentConversation === conversation) {
+                    addMessage(aiResponse, 'assistant');
+                } else {
+                    recordMessage(conversation, aiResponse, 'assistant');
+                }
             }, 500);
+        }
+
+        // Create a conversation on demand so messages always have a home
+        function ensureConversation() {
+            if (!currentConversation) {
+                currentConversation = createConversation();
+                conversations.push(currentConversation);
+                updateConversationsList();
+            }
+            return currentConversation;
+        }
+
+        function createConversation() {
+            return {
+                id: Date.now(),
+                title: `محادثة ${new Date().toLocaleDateString('ar-SA')}`,
+                messages: [],
+                createdAt: new Date().toISOString()
+            };
+        }
+
+        function recordMessage(conversation, text, sender) {
+            const entry = { text, sender, time: new Date().toISOString() };
+            conversation.messages.push(entry);
+            saveConversations();
+            updateStats();
+            return entry;
         }
 
         // Add Message to Chat
         function addMessage(text, sender) {
+            const conversation = ensureConversation();
+            const entry = recordMessage(conversation, text, sender);
+            renderMessage(entry);
+        }
+
+        function renderMessage(entry) {
             const container = document.getElementById('messagesContainer');
 
             // Clear welcome message on first message
-            if (container.children.length === 1 && container.children[0].textContent.includes('اختر نموذج')) {
+            if (container.querySelector('.message') === null) {
                 container.innerHTML = '';
             }
 
             const messageEl = document.createElement('div');
-            messageEl.className = `message ${sender}`;
+            messageEl.className = `message ${entry.sender}`;
             messageEl.innerHTML = `
                 <div>
-                    <div class="message-content">${text}</div>
-                    <div class="message-time">${new Date().toLocaleTimeString('ar-SA')}</div>
+                    <div class="message-content">${escapeHtml(entry.text)}</div>
+                    <div class="message-time">${escapeHtml(new Date(entry.time).toLocaleTimeString('ar-SA'))}</div>
                 </div>
             `;
 
             container.appendChild(messageEl);
             container.scrollTop = container.scrollHeight;
+        }
 
-            // Update stats
+        function renderConversation(conversation) {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = WELCOME_HTML;
+            (conversation?.messages || []).forEach(renderMessage);
+        }
+
+        function updateStats() {
+            const messageCount = conversations.reduce((total, conv) => total + (conv.messages?.length || 0), 0);
             document.getElementById('messageCount').textContent = messageCount;
+            document.getElementById('conversationCount').textContent = conversations.length;
+        }
+
+        function saveConversations() {
+            localStorage.setItem('conversations', JSON.stringify(conversations));
         }
 
         // Generate AI Response
@@ -674,23 +740,12 @@
 
         // Start New Chat
         function startNewChat() {
-            currentConversation = {
-                id: Date.now(),
-                title: `محادثة ${new Date().toLocaleDateString('ar-SA')}`,
-                messages: [],
-                createdAt: new Date()
-            };
+            currentConversation = createConversation();
             conversations.push(currentConversation);
-            conversationCount++;
 
-            document.getElementById('messagesContainer').innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: center; align-items: center; height: 100%; color: #94a3b8;">
-                    <i class="fas fa-robot" style="font-size: 3rem; color: var(--primary);"></i>
-                    <p>محادثة جديدة. اختر نموذج ذكاء اصطناعي للبدء</p>
-                </div>
-            `;
-
-            document.getElementById('conversationCount').textContent = conversationCount;
+            renderConversation(currentConversation);
+            saveConversations();
+            updateStats();
             updateConversationsList();
         }
 
@@ -706,6 +761,7 @@
                 item.textContent = conv.title;
                 item.onclick = () => {
                     currentConversation = conv;
+                    renderConversation(conv);
                     updateConversationsList();
                 };
                 list.appendChild(item);
@@ -715,7 +771,19 @@
         // Load Conversations
         function loadConversations() {
             const saved = localStorage.getItem('conversations');
-            if (saved) conversations = JSON.parse(saved);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) {
+                        conversations = parsed.map(conv => ({ ...conv, messages: conv.messages || [] }));
+                    }
+                } catch (e) {
+                    conversations = [];
+                }
+            }
+            currentConversation = conversations[conversations.length - 1] || null;
+            renderConversation(currentConversation);
+            updateStats();
             updateConversationsList();
         }
 
@@ -733,9 +801,7 @@
         }
 
         // Save conversations periodically
-        setInterval(() => {
-            localStorage.setItem('conversations', JSON.stringify(conversations));
-        }, 5000);
+        setInterval(saveConversations, 5000);
     </script>
 </body>
 </html>
