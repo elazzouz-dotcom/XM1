@@ -526,6 +526,13 @@
         let currentConversation = null;
         let currentModel = null;
 
+        const STORAGE_KEY = 'conversations';
+
+        // Ids repeat across providers (e.g. llama-2-70b), so options are keyed by provider too
+        function modelKey(model) {
+            return `${model.provider}:${model.id}`;
+        }
+
         const WELCOME_HTML = `
             <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: center; align-items: center; height: 100%; color: #94a3b8;">
                 <i class="fas fa-robot" style="font-size: 3rem; color: var(--primary);"></i>
@@ -558,7 +565,7 @@
             // Add to dropdown
             allModels.forEach(model => {
                 const option = document.createElement('option');
-                option.value = model.id;
+                option.value = modelKey(model);
                 option.textContent = `${model.name} (${model.provider})`;
                 modelSelect.appendChild(option);
             });
@@ -580,6 +587,7 @@
                 models.forEach(model => {
                     const modelEl = document.createElement('div');
                     modelEl.className = 'model-item';
+                    modelEl.dataset.modelKey = modelKey(model);
                     modelEl.onclick = () => selectModel(model, modelEl);
                     modelEl.innerHTML = `
                         <div class="model-name">${escapeHtml(model.name)}</div>
@@ -598,7 +606,7 @@
             document.getElementById('currentModel').textContent = model.name;
             document.getElementById('chatTitle').textContent = `محادثة مع ${model.name}`;
             document.getElementById('chatSubtitle').textContent = `${model.category} • ${model.provider}`;
-            document.getElementById('modelSelect').value = model.id;
+            document.getElementById('modelSelect').value = modelKey(model);
 
             // Update active state
             document.querySelectorAll('.model-item').forEach(item => {
@@ -609,18 +617,16 @@
 
         // Change Model from dropdown
         function changeModel() {
-            const modelId = document.getElementById('modelSelect').value;
+            const key = document.getElementById('modelSelect').value;
             let foundModel = null;
 
             Object.values(AIModels).forEach(providerModels => {
-                const model = providerModels.find(m => m.id === modelId);
+                const model = providerModels.find(m => modelKey(m) === key);
                 if (model) foundModel = model;
             });
 
             if (foundModel) {
-                const modelEls = Array.from(document.querySelectorAll('.model-item'));
-                const sourceEl = modelEls.find(el => el.querySelector('.model-name')?.textContent === foundModel.name);
-                selectModel(foundModel, sourceEl);
+                selectModel(foundModel, document.querySelector(`.model-item[data-model-key="${CSS.escape(key)}"]`));
             }
         }
 
@@ -673,7 +679,7 @@
         }
 
         function recordMessage(conversation, text, sender) {
-            const entry = { text, sender, time: new Date().toISOString() };
+            const entry = { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, text, sender, time: new Date().toISOString() };
             conversation.messages.push(entry);
             saveConversations();
             updateStats();
@@ -720,8 +726,48 @@
             document.getElementById('conversationCount').textContent = conversations.length;
         }
 
+        // Merge with whatever is in storage so a second tab cannot be overwritten
         function saveConversations() {
-            localStorage.setItem('conversations', JSON.stringify(conversations));
+            conversations = mergeConversations(readStoredConversations(), conversations);
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+            } catch (e) {
+                console.warn('تعذر حفظ المحادثات محلياً', e);
+            }
+        }
+
+        function readStoredConversations() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return [];
+            try {
+                const parsed = JSON.parse(saved);
+                if (!Array.isArray(parsed)) return [];
+                return parsed.map(conv => ({ ...conv, messages: Array.isArray(conv.messages) ? conv.messages : [] }));
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // Union by conversation id, then by message id; local objects keep their identity
+        function mergeConversations(stored, local) {
+            const byId = new Map(local.map(conv => [conv.id, conv]));
+            stored.forEach(conv => {
+                const existing = byId.get(conv.id);
+                if (!existing) {
+                    byId.set(conv.id, conv);
+                    return;
+                }
+                const seen = new Set(existing.messages.map(messageKey));
+                conv.messages.forEach(m => {
+                    if (!seen.has(messageKey(m))) existing.messages.push(m);
+                });
+                existing.messages.sort((a, b) => new Date(a.time) - new Date(b.time));
+            });
+            return Array.from(byId.values()).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        }
+
+        function messageKey(message) {
+            return message.id || `${message.time}|${message.sender}|${message.text}`;
         }
 
         // Generate AI Response
@@ -770,17 +816,7 @@
 
         // Load Conversations
         function loadConversations() {
-            const saved = localStorage.getItem('conversations');
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed)) {
-                        conversations = parsed.map(conv => ({ ...conv, messages: conv.messages || [] }));
-                    }
-                } catch (e) {
-                    conversations = [];
-                }
-            }
+            conversations = readStoredConversations();
             currentConversation = conversations[conversations.length - 1] || null;
             renderConversation(currentConversation);
             updateStats();
@@ -800,8 +836,15 @@
             alert('إعدادات النموذج والحفظ التلقائي قريباً!');
         }
 
-        // Save conversations periodically
-        setInterval(saveConversations, 5000);
+        // Pick up conversations written by other tabs
+        window.addEventListener('storage', (e) => {
+            if (e.key !== STORAGE_KEY) return;
+            conversations = mergeConversations(readStoredConversations(), conversations);
+            currentConversation = conversations.find(c => c.id === currentConversation?.id) || currentConversation;
+            renderConversation(currentConversation);
+            updateStats();
+            updateConversationsList();
+        });
     </script>
 </body>
 </html>
