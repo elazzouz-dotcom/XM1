@@ -186,3 +186,15 @@ document.querySelectorAll('.publish-option').forEach(option => option.addEventLi
 
 
 document.querySelectorAll('.mini-ai-card').forEach(card => card.addEventListener('click', async () => { openPanel('aiPanel'); const panel = document.getElementById('aiPanel'); try { if (panel && !document.fullscreenElement) await panel.requestFullscreen?.(); } catch {} }));
+
+// أوامر الشريط المصغر الإضافي؛ يعيد استخدام أحداث MX1 الأصلية ولا يستبدلها
+const miniPublishButton = document.getElementById('openPublishBtn2');
+miniPublishButton?.addEventListener('click', () => document.getElementById('openPublishBtn')?.click());
+document.getElementById('miniMessageSend')?.addEventListener('click', () => {
+  const miniInput = document.getElementById('miniMessageInput'); const message = miniInput?.value.trim(); if (!message) return;
+  document.getElementById('mx2HeaderBtn')?.click();
+  window.setTimeout(() => { const input = document.getElementById('xm2Input'); if (input) { input.value = message; document.getElementById('xm2Send')?.click(); } }, 60);
+  if (miniInput) miniInput.value = '';
+});
+document.getElementById('miniMessageInput')?.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); document.getElementById('miniMessageSend')?.click(); } });
+document.getElementById('miniShareBtn')?.addEventListener('click', async () => { try { if (navigator.share) await navigator.share({ title:'MX1', text:'MX1 — مساحة النشر الذكية', url:window.location.href }); else await navigator.clipboard.writeText(window.location.href); } catch {} });
