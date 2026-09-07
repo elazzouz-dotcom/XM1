@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const state = { assistant: 'cloudflare', panel: 'homePanel', history: { cloudflare: [], mx3: [] } };
   const panels = [...document.querySelectorAll('.home-panel,.workspace-panel')];
-  const apiBase = () => (localStorage.getItem('mx1_api_base') || '').replace(/\/$/, '');
+  const defaultApiBase = () => window.location.hostname === 'xm1.elazzouz4.workers.dev' ? window.location.origin : '';
+  const apiBase = () => (localStorage.getItem('mx1_api_base') || defaultApiBase()).replace(/\/$/, '');
   const apiToken = () => localStorage.getItem('mx1_api_token') || '';
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
@@ -43,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const base = apiBase();
     if (base) {
       try {
-        const response = await fetch(`${base}/api/mx2/chat`, { method: 'POST', headers: {'content-type':'application/json', ...(apiToken() ? {authorization:`Bearer ${apiToken()}`} : {})}, body:JSON.stringify({ message: text, assistant: state.assistant === 'cloudflare' ? 'mx2' : 'mx3', history }) });
+        const response = await fetch(`${base}/api/mx2/chat`, { method: 'POST', headers: {'content-type':'application/json', ...(apiToken() ? {authorization:`Bearer ${apiToken()}`} : {})}, body:JSON.stringify({ message: text, assistant: state.assistant === 'cloudflare' ? 'mx2' : 'mx3', history, connectors: [...activeConnectors] }) });
         const data = await response.json(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`); const answer = data.response || data.message || 'تم استلام الرد من الخادم.'; appendXm2(answer, 'ai'); history.push({ role: 'assistant', content: answer }); return;
       } catch (error) { appendXm2(`تعذر الوصول إلى الخادم: ${escapeHtml(error.message)}`, 'ai'); return; }
     }
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`${base}/api/agent/execute`, { method:'POST', headers:{'content-type':'application/json', ...(apiToken()?{authorization:`Bearer ${apiToken()}`}:{})}, body:JSON.stringify({ requirement:text, auto_merge:false }) });
       const data = await response.json(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
       input.value = ''; alert(`تم إنشاء عملية النشر ${data.id || ''} في وضع المراجعة الآمنة.`);
-    } catch (error) { alert(`لم يتم النشر: ${error.message}`); } finally { button.disabled = false; button.innerHTML = '<i class="fa-solid fa-arrow-up"></i> نشر'; }
+    } catch (error) { const notice = document.getElementById('uploadStatus'); if (notice) notice.textContent = `تعذر النشر عبر Worker: ${error.message}`; } finally { button.disabled = false; button.innerHTML = '<i class="fa-solid fa-arrow-up"></i> نشر'; }
   });
 
   const baseInput = document.getElementById('apiBaseInput'); const tokenInput = document.getElementById('apiTokenInput'); const status = document.getElementById('connectionStatus');
@@ -88,9 +89,46 @@ document.getElementById('gatewaySend')?.addEventListener('click', async () => {
   if (!base) { if (result) result.textContent = 'أضف عنوان API من صفحة الاتصالات أولًا.'; return; }
   if (result) result.textContent = 'جارٍ التوجيه عبر MX1 Gateway...';
   try {
-    const response = await fetch(`${base}/api/gateway`, { method: 'POST', headers: { 'content-type': 'application/json', ...(apiToken() ? { authorization: `Bearer ${apiToken()}` } : {}) }, body: JSON.stringify({ provider: gatewayState.provider, message, history: gatewayState.history.slice(-10) }) });
+    const response = await fetch(`${base}/api/gateway`, { method: 'POST', headers: { 'content-type': 'application/json', ...(apiToken() ? { authorization: `Bearer ${apiToken()}` } : {}) }, body: JSON.stringify({ provider: gatewayState.provider, message, history: gatewayState.history.slice(-10), connectors: [...activeConnectors] }) });
     const data = await response.json(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
     gatewayState.history.push({ role: 'user', content: message }, { role: 'assistant', content: data.response });
     if (result) result.textContent = `${data.provider}: ${data.response}`;
   } catch (error) { if (result) result.textContent = `فشل التوجيه: ${error.message}`; }
 });
+
+
+// نشر ZIP فعلي عبر Worker
+const zipInput = document.getElementById('zipInput');
+document.getElementById('zipPickBtn')?.addEventListener('click', () => zipInput?.click());
+zipInput?.addEventListener('change', async () => {
+  const file = zipInput.files?.[0]; const status = document.getElementById('uploadStatus'); const base = apiBase();
+  if (!file) return; if (!base) { if (status) status.textContent = 'أضف عنوان API من الاتصالات أولًا.'; return; }
+  if (status) status.textContent = 'جارٍ رفع ZIP وفك الضغط...';
+  try {
+    const form = new FormData(); form.append('file', file, file.name);
+    const response = await fetch(`${base}/api/zip/upload`, { method: 'POST', headers: apiToken() ? { authorization: `Bearer ${apiToken()}` } : {}, body: form });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    if (status) status.innerHTML = `تم النشر: <a href="${base}${data.preview}" target="_blank" rel="noopener">فتح المعاينة</a> (${data.files} ملف)`;
+  } catch (error) { if (status) status.textContent = `فشل ZIP: ${error.message}`; }
+});
+
+document.getElementById('integrationBtn')?.addEventListener('click', () => openPanel('connectPanel'));
+document.getElementById('aiFullscreenBtn')?.addEventListener('click', async () => {
+  const panel = document.getElementById('aiPanel');
+  try { if (!document.fullscreenElement) await panel?.requestFullscreen?.(); else await document.exitFullscreen?.(); } catch { panel?.classList.toggle('ai-fullscreen-active'); }
+});
+
+
+// طبقة الموصلات: التطبيقات المحددة تصبح سياقًا متاحًا للمحادثة
+const connectorNames = { github:'GitHub', gmail:'Gmail', cloudflare:'Cloudflare', workers:'Cloudflare Workers', firecrawl:'Firecrawl', clickhouse:'ClickHouse', cloudinary:'Cloudinary', cockroachdb:'CockroachDB Cloud', shopify:'Shopify' };
+const activeConnectors = new Set(JSON.parse(localStorage.getItem('mx1_connectors') || '[]'));
+const connectorMenu = document.getElementById('connectorMenu'); const connectorCount = document.getElementById('connectorCount'); const activeConnectorsEl = document.getElementById('activeConnectors');
+function renderConnectors() {
+  if (connectorCount) connectorCount.textContent = String(activeConnectors.size);
+  document.querySelectorAll('.connector-row').forEach(row => { const active = activeConnectors.has(row.dataset.connector); row.classList.toggle('connected', active); const button = row.querySelector('.connector-toggle'); if (button) button.textContent = active ? 'مفعّل' : 'تفعيل'; });
+  if (activeConnectorsEl) activeConnectorsEl.innerHTML = [...activeConnectors].map(id => `<span class="active-connector"><i class="fa-solid fa-plug"></i>${connectorNames[id]}</span>`).join('');
+}
+document.getElementById('connectorBtn')?.addEventListener('click', () => { if (connectorMenu) connectorMenu.hidden = !connectorMenu.hidden; });
+document.getElementById('connectorClose')?.addEventListener('click', () => { if (connectorMenu) connectorMenu.hidden = true; });
+document.querySelectorAll('.connector-toggle').forEach(button => button.addEventListener('click', event => { const row = event.currentTarget.closest('.connector-row'); const id = row?.dataset.connector; if (!id) return; activeConnectors.has(id) ? activeConnectors.delete(id) : activeConnectors.add(id); localStorage.setItem('mx1_connectors', JSON.stringify([...activeConnectors])); renderConnectors(); }));
+renderConnectors();

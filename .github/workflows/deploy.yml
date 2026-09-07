@@ -1,0 +1,29 @@
+name: Deploy MX1 Worker
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare/**'
+      - 'index.html'
+      - 'script.js'
+      - 'styles.css'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloudflare
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cloudflare/package-lock.json
+      - run: npm install
+      - run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

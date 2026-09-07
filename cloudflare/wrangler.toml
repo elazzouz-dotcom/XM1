@@ -14,6 +14,10 @@ GEMINI_MODEL = "gemini-2.5-flash"
 [ai]
 binding = "AI"
 
+[assets]
+directory = ".."
+binding = "ASSETS"
+
 # أضف IDs الحقيقية بعد تفعيل الموارد في Cloudflare.
 # [[kv_namespaces]]
 # binding = "APPS"
