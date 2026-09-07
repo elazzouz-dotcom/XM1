@@ -68,3 +68,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
     }
 });
+
+
+// أدوات تجربة الاستخدام في MX1
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const mobileNavBtn = document.getElementById('mobileNavBtn');
+const sidebar = document.querySelector('.sidebar');
+fullscreenBtn?.addEventListener('click', async () => {
+    try {
+        if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
+        else await document.exitFullscreen?.();
+    } catch (_) { document.body.classList.toggle('fullscreen-mode'); }
+});
+document.addEventListener('fullscreenchange', () => {
+    document.body.classList.toggle('fullscreen-mode', Boolean(document.fullscreenElement));
+    const icon = fullscreenBtn?.querySelector('i');
+    if (icon) icon.className = document.fullscreenElement ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+});
+mobileNavBtn?.addEventListener('click', () => {
+    sidebar?.classList.toggle('mobile-open');
+});
+document.querySelectorAll('.nav-item').forEach(link => link.addEventListener('click', () => sidebar?.classList.remove('mobile-open')));
