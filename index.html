@@ -68,10 +68,15 @@
         </section>
 
         <section id="settings-section" class="section-card">
-            <h3><i class="fa-solid fa-sliders"></i> لوحة الإعدادات والتحكم</h3>
-            <p class="section-note">تخصيص نماذج المعالجة، الأمان، وتفضيلات العرض.</p>
-            <label class="setting-row"><input type="checkbox" checked> تفعيل الردود التلقائية المتقدمة</label>
-            <label class="setting-row"><input type="checkbox" checked> الحفظ التلقائي لسجل المحادثات داخل الجلسة</label>
+            <h3><i class="fa-solid fa-sliders"></i> لوحة الإعدادات والاتصال</h3>
+            <p class="section-note">اربط MX1 بخادم Worker حقيقي. لا تُحفظ الأسرار داخل الكود؛ يُحفظ رمز الجلسة محليًا على جهازك فقط.</p>
+            <div class="connection-grid">
+                <label>عنوان API MX1<input id="apiBaseInput" class="setting-input" type="url" placeholder="https://mx1.example.workers.dev"></label>
+                <label>رمز API<input id="apiTokenInput" class="setting-input" type="password" placeholder="Bearer token (اختياري)"></label>
+            </div>
+            <div class="connection-actions"><button id="saveConnectionBtn" class="btn-primary">حفظ الاتصال</button><button id="testConnectionBtn" class="secondary-button">اختبار الاتصال</button><span id="connectionStatus" class="connection-status">غير مختبر</span></div>
+            <label class="setting-row"><input type="checkbox" id="autoReplies" checked> تفعيل الردود التلقائية المتقدمة</label>
+            <label class="setting-row"><input type="checkbox" id="saveHistory" checked> الحفظ التلقائي لسجل المحادثات داخل الجلسة</label>
         </section>
     </main>
 </div>

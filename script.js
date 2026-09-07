@@ -37,11 +37,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'تم استلام رسالتك في مسار MX3 الداخلي. اكتب الهدف أو الملف أو المشكلة التي تريد تحليلها وسأرتبها إلى خطوات عملية.';
     }
 
-    function sendXm2() {
+    function connection() {
+        return { base: localStorage.getItem('mx1_api_base') || '', token: localStorage.getItem('mx1_api_token') || '' };
+    }
+    async function sendXm2() {
         const text = xm2Input.value.trim();
         if (!text) return;
         appendXm2(text, 'user');
         xm2Input.value = '';
+        const cfg = connection();
+        if (cfg.base) {
+            try {
+                const response = await fetch(`${cfg.base.replace(/\/$/, '')}/api/mx2/chat`, { method: 'POST', headers: { 'content-type': 'application/json', ...(cfg.token ? { authorization: `Bearer ${cfg.token}` } : {}) }, body: JSON.stringify({ message: text, assistant: state.assistant === 'cloudflare' ? 'mx2' : 'mx3' }) });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+                appendXm2(data.response || data.message || 'تم استلام الرد من الخادم.', 'ai');
+                return;
+            } catch (error) { appendXm2(`تعذر الاتصال بالخادم: ${escapeHtml(error.message)}. تم تشغيل الرد المحلي مؤقتًا.`, 'ai'); }
+        }
         window.setTimeout(() => appendXm2(xm2Reply(text), 'ai'), 350);
     }
     xm2Send?.addEventListener('click', sendXm2);
@@ -62,6 +75,24 @@ document.addEventListener('DOMContentLoaded', () => {
         window.setTimeout(() => appendGeneral('تم استلام طلبك في مساحة MX1 العامة. استخدم XM2 إذا أردت تحديد المسار بين Cloudflare وMX2.', 'ai'), 350);
     }
     sendBtn?.addEventListener('click', sendGeneral);
+
+    const apiBaseInput = document.getElementById('apiBaseInput');
+    const apiTokenInput = document.getElementById('apiTokenInput');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const savedBase = localStorage.getItem('mx1_api_base') || '';
+    if (apiBaseInput) apiBaseInput.value = savedBase;
+    document.getElementById('saveConnectionBtn')?.addEventListener('click', () => {
+        localStorage.setItem('mx1_api_base', apiBaseInput?.value.trim() || '');
+        localStorage.setItem('mx1_api_token', apiTokenInput?.value.trim() || '');
+        if (connectionStatus) connectionStatus.textContent = 'تم الحفظ محليًا';
+    });
+    document.getElementById('testConnectionBtn')?.addEventListener('click', async () => {
+        const base = apiBaseInput?.value.trim().replace(/\/$/, '');
+        if (!base) { if (connectionStatus) connectionStatus.textContent = 'أدخل عنوان API أولًا'; return; }
+        if (connectionStatus) connectionStatus.textContent = 'جارٍ الاختبار...';
+        try { const r = await fetch(`${base}/api/status`); const d = await r.json(); if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`); if (connectionStatus) connectionStatus.textContent = `متصل: ${d.platform || 'MX1'}`; }
+        catch (error) { if (connectionStatus) connectionStatus.textContent = `فشل الاتصال: ${error.message}`; }
+    });
     userInput?.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendGeneral(); } });
 
     function escapeHtml(value) {
