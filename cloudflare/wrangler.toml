@@ -18,9 +18,18 @@ binding = "AI"
 directory = ".."
 binding = "ASSETS"
 
-# أضف IDs الحقيقية بعد تفعيل الموارد في Cloudflare.
-# [[kv_namespaces]]
-# binding = "APPS"
+[[kv_namespaces]]
+binding = "APPS"
+id = "74928e8799ab4cf88bf4a6cb83e098d5"
+
+[[kv_namespaces]]
+binding = "DEPLOYMENTS"
+id = "772d2208ab0b4727915b17f409133c63"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xm1"
+database_id = "d06aaa8f-e765-4d37-9334-f614c5dec85e"
 # id = "..."
 # [[kv_namespaces]]
 # binding = "DEPLOYMENTS"
