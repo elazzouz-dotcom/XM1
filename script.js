@@ -175,3 +175,14 @@ document.querySelectorAll('.connector-row').forEach(row => { const original = ro
 document.querySelectorAll('.connector-method').forEach(button => button.addEventListener('click', () => { selectedMethod = button.dataset.method; document.querySelectorAll('.connector-method').forEach(item => item.classList.toggle('active', item === button)); renderConnectorFields(JSON.parse(localStorage.getItem(`mx1_connector_${selectedConnector}`) || '{}')); }));
 document.getElementById('connectorConfigClose')?.addEventListener('click', () => { if (connectorModal) connectorModal.hidden = true; });
 document.getElementById('connectorConfigSave')?.addEventListener('click', () => { const value = document.getElementById('connectorSecretInput')?.value || ''; const endpoint = document.getElementById('connectorEndpointInput')?.value || ''; localStorage.setItem(`mx1_connector_${selectedConnector}`, JSON.stringify({ method: selectedMethod, value, endpoint, configured: true })); connectorStatus.textContent = 'تم حفظ إعداد الموصل على هذا الجهاز؛ يلزم ربط Worker لتشغيله داخل MX2 وMX3.'; if (connectorModal) connectorModal.hidden = true; });
+
+
+// شريط النشر السفلي وقائمة أنواع المحتوى
+const publishMenu = document.getElementById('publishMenu'); const publishBackdrop = document.getElementById('publishBackdrop');
+function togglePublishMenu(open) { if (!publishMenu) return; publishMenu.hidden = !open; if (publishBackdrop) publishBackdrop.hidden = !open; }
+document.getElementById('openPublishBtn')?.addEventListener('click', () => togglePublishMenu(publishMenu?.hidden));
+publishBackdrop?.addEventListener('click', () => togglePublishMenu(false));
+document.querySelectorAll('.publish-option').forEach(option => option.addEventListener('click', () => { const choice = option.dataset.publishChoice; togglePublishMenu(false); if (choice === 'text') { openPanel('homePanel'); document.getElementById('homePanel')?.classList.add('composer-open'); document.querySelector('.publish-type[data-publish-type="text"]')?.click(); document.getElementById('publishInput')?.focus(); } else if (choice === 'image') { openPanel('homePanel'); document.getElementById('homePanel')?.classList.add('composer-open'); document.querySelector('.publish-type[data-publish-type="image"]')?.click(); } else { openPanel('homePanel'); document.getElementById('homePanel')?.classList.add('composer-open'); document.querySelector('.publish-type[data-publish-type="zip"]')?.click(); } }));
+
+
+document.querySelectorAll('.mini-ai-card').forEach(card => card.addEventListener('click', async () => { openPanel('aiPanel'); const panel = document.getElementById('aiPanel'); try { if (panel && !document.fullscreenElement) await panel.requestFullscreen?.(); } catch {} }));
