@@ -1,91 +1,70 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const sendBtn = document.getElementById('sendBtn');
+    const state = { assistant: 'cloudflare' };
+    const xm2Feed = document.getElementById('xm2Feed');
+    const xm2Input = document.getElementById('xm2Input');
+    const xm2Send = document.getElementById('xm2Send');
+    const assistantStatus = document.getElementById('assistantStatus');
+    const generalFeed = document.getElementById('feedBox');
     const userInput = document.getElementById('userInput');
-    const feedBox = document.getElementById('feedBox');
-    const modelSelect = document.getElementById('modelSelect');
+    const sendBtn = document.getElementById('sendBtn');
 
-    if (!feedBox || !userInput) return;
-
-    if (sendBtn) {
-        sendBtn.addEventListener('click', handleUserMessage);
-    }
-
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleUserMessage();
-        }
+    document.querySelectorAll('.assistant-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            state.assistant = tab.dataset.assistant;
+            document.querySelectorAll('.assistant-tab').forEach(item => item.classList.toggle('active', item === tab));
+            const label = state.assistant === 'cloudflare' ? 'مساعد Cloudflare' : 'MX2 — المساعد الداخلي';
+            assistantStatus.innerHTML = `<span class="status-dot"></span> المسار المحدد: ${label}`;
+            appendXm2(`تم التبديل إلى ${label}. اكتب رسالتك في هذا المسار.`, 'ai');
+        });
     });
 
-    function handleUserMessage() {
+    function appendXm2(text, sender) {
+        const item = document.createElement('div');
+        item.className = `feed-message ${sender}`;
+        item.innerHTML = sender === 'user' ? `<strong>أنت:</strong> ${escapeHtml(text)}` : `<strong>${state.assistant === 'cloudflare' ? 'مساعد Cloudflare' : 'MX2'}:</strong> ${text}`;
+        xm2Feed.appendChild(item);
+        xm2Feed.scrollTop = xm2Feed.scrollHeight;
+    }
+
+    function xm2Reply(text) {
+        const q = text.toLowerCase();
+        if (state.assistant === 'cloudflare') {
+            if (q.includes('worker') || q.includes('cloudflare') || q.includes('نشر')) return 'مسار Cloudflare جاهز لمراجعة Workers وPages وD1 وKV وR2. اربط هذا المسار ببيئة Cloudflare API ذات صلاحية كتابة حتى تتحول الأوامر إلى تغييرات فعلية.';
+            if (q.includes('github') || q.includes('مستودع')) return 'يمكن ربط مستودع GitHub بمسار النشر عبر workflow، مع إبقاء إعدادات الأسرار خارج الكود داخل Cloudflare Secrets.';
+            return 'تم استلام رسالتك في مسار Cloudflare. هذا الإصدار يحافظ على الفصل بين واجهة XM2 والموصل الخارجي إلى أن يُضاف endpoint موثّق.';
+        }
+        if (q.includes('كود') || q.includes('برمج') || q.includes('مشروع')) return 'أنا مسار MX2 الداخلي. أستطيع مساعدتك في تحليل بنية المشروع، صياغة التعديلات، وشرح خطوات التنفيذ داخل MX1.';
+        return 'تم استلام رسالتك في مسار MX2 الداخلي. اكتب الهدف أو الملف أو المشكلة التي تريد تحليلها وسأرتبها إلى خطوات عملية.';
+    }
+
+    function sendXm2() {
+        const text = xm2Input.value.trim();
+        if (!text) return;
+        appendXm2(text, 'user');
+        xm2Input.value = '';
+        window.setTimeout(() => appendXm2(xm2Reply(text), 'ai'), 350);
+    }
+    xm2Send?.addEventListener('click', sendXm2);
+    xm2Input?.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendXm2(); } });
+
+    function appendGeneral(text, sender) {
+        const item = document.createElement('div');
+        item.className = `feed-message ${sender}`;
+        item.innerHTML = sender === 'user' ? `<strong>أنت:</strong> ${escapeHtml(text)}` : `<strong>نظام MX1:</strong> ${text}`;
+        generalFeed.appendChild(item);
+        generalFeed.scrollTop = generalFeed.scrollHeight;
+    }
+    function sendGeneral() {
         const text = userInput.value.trim();
         if (!text) return;
-
-        const selectedModel = modelSelect && modelSelect.selectedIndex >= 0
-            ? modelSelect.options[modelSelect.selectedIndex].text
-            : 'MXAI Enterprise';
-
-        appendMessage(text, 'user');
+        appendGeneral(text, 'user');
         userInput.value = '';
-
-        const botMsgId = 'bot-' + Date.now();
-        appendLoadingMessage(botMsgId, selectedModel);
-
-        setTimeout(() => {
-            updateBotMessage(botMsgId, generateAdvancedReply(text));
-        }, 1000);
+        window.setTimeout(() => appendGeneral('تم استلام طلبك في مساحة MX1 العامة. استخدم XM2 إذا أردت تحديد المسار بين Cloudflare وMX2.', 'ai'), 350);
     }
+    sendBtn?.addEventListener('click', sendGeneral);
+    userInput?.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendGeneral(); } });
 
-    function generateAdvancedReply(query) {
-        const q = query.toLowerCase();
-
-        if (q.includes('تاريخ') || q.includes('اليوم') || q.includes('يوم')) {
-            const today = new Date().toLocaleDateString('ar-SA', { dateStyle: 'full' });
-            return `تاريخ اليوم هو <strong>${escapeHtml(today)}</strong>. النظام يعمل بكفاءة وأمان تام عبر شبكة MXAI السحابية.`;
-        } else if (q.includes('cloudflare') || q.includes('كلودفلير')) {
-            return `تم تصميم واجهة <strong>MXAI</strong> هنا لتلهم المعايير التقنية المتقدمة لـ Cloudflare: سرعة فائقة، أمان موثوق، وتصميم بصري داكن مريح للعين ومناسب للمطورين.`;
-        } else if (q.includes('برمجة') || q.includes('كود') || q.includes('system')) {
-            return `بصفتي مساعد البنية التحتية الذكية في MXAI، أنا جاهز لتدقيق الأكواد، فحص الثغرات، وتحسين أداء السيرفرات لديك. ما هي المشكلة التقنية التي تواجهها؟`;
-        }
-        return `تم استلام الطلب بنجاح وتحليله عبر خوارزميات <strong>MXAI</strong>: <br><code style="background:#111827; padding:4px 8px; border-radius:4px; color:#f38020;">${escapeHtml(query)}</code><br><br>كيف يمكنني مساعدتك بشكل عميق في هذا المشروع التقني؟`;
-    }
-
-    function appendMessage(text, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = sender === 'user' ? 'feed-message user' : 'feed-message ai';
-        messageDiv.innerHTML = sender === 'user'
-            ? `<strong>أنت:</strong> ${escapeHtml(text)}`
-            : `<strong>نظام MXAI:</strong> ${text}`;
-        appendToFeed(messageDiv);
-    }
-
-    function appendLoadingMessage(id, modelName) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'feed-message ai';
-        messageDiv.id = id;
-        messageDiv.innerHTML = `<strong>نظام MXAI:</strong> <span class="message-content" style="color: var(--text-muted);">جارٍ المعالجة الآمنة عبر ${escapeHtml(modelName)}...</span>`;
-        appendToFeed(messageDiv);
-    }
-
-    function updateBotMessage(id, html) {
-        const element = document.getElementById(id);
-        if (element) {
-            const content = element.querySelector('.message-content');
-            if (content) {
-                content.style.color = '';
-                content.innerHTML = html;
-            }
-        }
-        feedBox.scrollTop = feedBox.scrollHeight;
-    }
-
-    function appendToFeed(messageDiv) {
-        feedBox.appendChild(messageDiv);
-        feedBox.scrollTop = feedBox.scrollHeight;
-    }
-
-    function escapeHtml(text) {
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return String(text).replace(/[&<>"']/g, (m) => map[m]);
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
     }
 });

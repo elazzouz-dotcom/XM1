@@ -3,89 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MXAI Cloud - المنصة الذكية المتكاملة</title>
+    <title>MX1 — منصة العمل الذكية</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2><i class="fa-solid fa-cloud-bolt"></i> MXAI Studio</h2>
-            </div>
-            
+<div class="app-container">
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-header"><h2><i class="fa-solid fa-cloud-bolt"></i> MX1</h2></div>
             <div class="nav-links">
-                <a href="#messages-section" class="nav-item active"><i class="fa-solid fa-comments"></i> المراسلات والدردشة</a>
-                <a href="#ai-collab-section" class="nav-item"><i class="fa-solid fa-network-wired"></i> تواصل الـ AI المشترك</a>
-                <a href="#social-section" class="nav-item"><i class="fa-solid fa-share-nodes"></i> التواصل الاجتماعي</a>
-                <a href="#settings-section" class="nav-item"><i class="fa-solid fa-sliders"></i> لوحة الإعدادات</a>
+                <a href="#xm2-section" class="nav-item active"><i class="fa-solid fa-robot"></i> XM2 — الذكاء الاصطناعي</a>
+                <a href="#messages-section" class="nav-item"><i class="fa-solid fa-comments"></i> المراسلات والدردشة</a>
+                <a href="#ai-collab-section" class="nav-item"><i class="fa-solid fa-network-wired"></i> تواصل النماذج</a>
+                <a href="#social-section" class="nav-item"><i class="fa-solid fa-share-nodes"></i> المجتمع التقني</a>
+                <a href="#settings-section" class="nav-item"><i class="fa-solid fa-sliders"></i> الإعدادات</a>
             </div>
+        </div>
+        <div class="sidebar-footer"><p>الحالة: متصل وآمن <i class="fa-solid fa-circle status-dot"></i></p></div>
+    </aside>
 
-            <div class="sidebar-footer" style="font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;">
-                <p>الحالة: متصل وآمن <i class="fa-solid fa-circle" style="color: #22c55e; font-size: 0.6rem;"></i></p>
+    <main class="main-content">
+        <header class="top-header">
+            <div><h1>منصة MX1</h1><p class="subtitle">مساحة عمل موحّدة لـ GitHub وCloudflare والذكاء الاصطناعي</p></div>
+            <span class="badge">XM2 مفعّل</span>
+        </header>
+
+        <section id="xm2-section" class="section-card xm2-card">
+            <h3><i class="fa-solid fa-robot"></i> XM2 — مركز الذكاء الاصطناعي</h3>
+            <p class="section-note">اختر المساعد الذي تريد محادثته. يتم إبقاء مسار Cloudflare منفصلًا عن مسار MX2 الداخلي حتى لا تختلط التعليمات والسياقات.</p>
+            <div class="assistant-tabs" role="tablist">
+                <button class="assistant-tab active" data-assistant="cloudflare"><i class="fa-solid fa-cloud"></i> مساعد Cloudflare</button>
+                <button class="assistant-tab" data-assistant="mx2"><i class="fa-solid fa-brain"></i> MX2 — المساعد الداخلي</button>
             </div>
-        </aside>
+            <div class="assistant-status" id="assistantStatus"><span class="status-dot"></span> المسار المحدد: مساعد Cloudflare</div>
+            <div id="xm2Feed" class="feed-box xm2-feed">
+                <div class="feed-message ai"><strong>مساعد Cloudflare:</strong> هذا مسار مستقل لمناقشة Workers وD1 وKV وR2 وإعدادات النشر.</div>
+            </div>
+            <div class="input-container">
+                <textarea id="xm2Input" placeholder="اكتب رسالتك إلى المساعد المحدد..."></textarea>
+                <button id="xm2Send" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
+            </div>
+        </section>
 
-        <main class="main-content">
-            <header class="top-header">
-                <h1>لوحة التحكم التقنية المتكاملة</h1>
-                <span class="badge">إصدار الشركات v2.5</span>
-            </header>
+        <section id="messages-section" class="section-card">
+            <h3><i class="fa-solid fa-comments"></i> المراسلات والدردشة</h3>
+            <p class="section-note">مساحة الدردشة العامة للمنصة، مع حفظ السياق داخل الصفحة الحالية.</p>
+            <div id="feedBox" class="feed-box"><div class="feed-message ai"><strong>نظام MX1:</strong> أهلاً بك في مساحة العمل. استخدم XM2 للمسارات المتخصصة.</div></div>
+            <div class="input-container"><textarea id="userInput" placeholder="اكتب استفسارك التقني هنا..."></textarea><button id="sendBtn" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> إرسال</button></div>
+        </section>
 
-            <section id="messages-section" class="section-card">
-                <h3><i class="fa-solid fa-comments"></i> قسم المراسلات والاستفسارات الذكية</h3>
-                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">اطرح أسئلتك ونقاشاتك وسيقوم النظام بتوليد الإجابات تدريجياً وبشكل طولي مستمر.</p>
-                
-                <div id="feedBox" class="feed-box">
-                    <div class="feed-message ai">
-                        <strong>نظام MXAI:</strong> أهلاً بك في بيئة العمل الطولية الجديدة. يمكنك كتابة أي استفسار برمجي أو تقني وسيتم تسجيله والرد عليه فوراً.
-                    </div>
-                </div>
+        <section id="ai-collab-section" class="section-card">
+            <h3><i class="fa-solid fa-network-wired"></i> تواصل النماذج</h3>
+            <p class="section-note">عرض موحّد لتنسيق المهام بين مساري Cloudflare وMX2.</p>
+            <div class="collab-log"><span class="cf-text">[Cloudflare]:</span> فحص إعدادات Worker والموارد.<br><span class="mx-text">[MX2]:</span> تحليل المتطلبات وصياغة خطوات التنفيذ.<br><span class="ok-text">[MX1]:</span> السياقان منفصلان والواجهة متزامنة.</div>
+        </section>
 
-                <div class="input-container">
-                    <textarea id="userInput" placeholder="اكتب استفسارك التقني هنا..."></textarea>
-                    <button id="sendBtn" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
-                </div>
-            </section>
+        <section id="social-section" class="section-card">
+            <h3><i class="fa-solid fa-share-nodes"></i> شبكة التواصل الاجتماعي والمجتمع التقني</h3>
+            <p class="section-note">تواصل مع مجتمع المطورين وشارك مشاريعك التقنية المفتوحة.</p>
+            <div class="link-row"><a href="https://github.com/elazzouz-dotcom/XM1" class="badge" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> مستودع GitHub</a><a href="#" class="badge"><i class="fa-brands fa-discord"></i> مجتمع المطورين</a><a href="#" class="badge"><i class="fa-brands fa-x-twitter"></i> تحديثات المنصة</a></div>
+        </section>
 
-            <section id="ai-collab-section" class="section-card">
-                <h3><i class="fa-solid fa-network-wired"></i> قسم تواصل النماذج (AI Collaboration)</h3>
-                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">شاهد كيف تتواصل نماذج الذكاء الاصطناعي مع بعضها لمعالجة المهام البرمجية وتحليل الأكواد.</p>
-                
-                <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); font-family: monospace; font-size: 0.85rem; line-height: 1.7;">
-                    <span style="color: #f38020;">[Model-GPT4]:</span> تم استلام هيكل المشروع وبدء الفحص البرمجي...<br>
-                    <span style="color: #38bdf8;">[Model-Claude]:</span> تم تحليل ملفات CSS وربطها بنجاح مع السكربتات الطولية.<br>
-                    <span style="color: #22c55e;">[System-MXAI]:</span> النماذج متزامنة وتعمل بكفاءة 100% بدون أي انقطاع.
-                </div>
-            </section>
-
-            <section id="social-section" class="section-card">
-                <h3><i class="fa-solid fa-share-nodes"></i> شبكة التواصل الاجتماعي والمجتمع التقني</h3>
-                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">تواصل مع مجتمع المطورين وشارك مشاريعك التقنية المفتوحة.</p>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <a href="#" class="badge" style="color: var(--text-main); text-decoration: none;"><i class="fa-brands fa-github"></i> مستودع GitHub التقني</a>
-                    <a href="#" class="badge" style="color: var(--text-main); text-decoration: none;"><i class="fa-brands fa-discord"></i> مجتمع المطورين (Discord)</a>
-                    <a href="#" class="badge" style="color: var(--text-main); text-decoration: none;"><i class="fa-brands fa-x-twitter"></i> تحديثات المنصة (X)</a>
-                </div>
-            </section>
-
-            <section id="settings-section" class="section-card">
-                <h3><i class="fa-solid fa-sliders"></i> لوحة الإعدادات والتحكم</h3>
-                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">تخصيص نماذج المعالجة، الأمان، وتفضيلات العرض الطولي.</p>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem;">
-                        <input type="checkbox" checked style="accent-color: var(--accent-color);"> تفعيل الردود التلقائية المتقدمة
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem;">
-                        <input type="checkbox" checked style="accent-color: var(--accent-color);"> الحفظ التلقائي لسجل المحادثات الطولية
-                    </label>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <script src="script.js"></script>
+        <section id="settings-section" class="section-card">
+            <h3><i class="fa-solid fa-sliders"></i> لوحة الإعدادات والتحكم</h3>
+            <p class="section-note">تخصيص نماذج المعالجة، الأمان، وتفضيلات العرض.</p>
+            <label class="setting-row"><input type="checkbox" checked> تفعيل الردود التلقائية المتقدمة</label>
+            <label class="setting-row"><input type="checkbox" checked> الحفظ التلقائي لسجل المحادثات داخل الجلسة</label>
+        </section>
+    </main>
+</div>
+<script src="script.js"></script>
 </body>
 </html>
