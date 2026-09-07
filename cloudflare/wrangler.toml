@@ -8,6 +8,10 @@ enabled = true
 [vars]
 PLATFORM_NAME = "mx1-integration-hub"
 AI_MODULE = "mx2"
+MX3_MODEL = "gpt-5-mini"
+
+[ai]
+binding = "AI"
 
 # أضف IDs الحقيقية بعد تفعيل الموارد في Cloudflare.
 # [[kv_namespaces]]

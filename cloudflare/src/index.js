@@ -18,9 +18,19 @@ function tasksFor(requirement) {
     { id: crypto.randomUUID(), type: 'review', title: 'مراجعة قبل الدمج', status: 'planned' }
   ];
 }
-async function aiReply(message, env) {
+async function aiReply(message, env, assistant = 'mx2', history = []) {
+  const userMessage = safeText(message);
+  const context = Array.isArray(history) ? history.slice(-10).map(item => ({ role: item.role === 'assistant' ? 'assistant' : 'user', content: safeText(item.content, 8000) })) : [];
+  if (assistant === 'mx3' && env.MX3_API_URL && env.MX3_API_TOKEN) {
+    const endpoint = env.MX3_API_URL.replace(/\/$/, '') + '/chat/completions';
+    const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.MX3_API_TOKEN}` }, body: JSON.stringify({ model: env.MX3_MODEL || 'gpt-5-mini', messages: [{ role: 'system', content: 'أنت MX3، مساعد برمجي داخل منصة MX1. أجب بدقة، اشرح القيود، ولا تنفذ تغييرات مدمرة دون تحقق.' }, ...context, { role: 'user', content: userMessage }] }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.error?.message || `MX3 provider HTTP ${response.status}`);
+    return data?.choices?.[0]?.message?.content || data?.response || '';
+  }
   if (!env.AI?.run) return null;
-  const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'system', content: 'أنت MX2، مساعد Cloudflare وGitHub. قدّم اقتراحات آمنة ولا تنفذ تغييرات مدمرة.' }, { role: 'user', content: safeText(message) }] });
+  const system = assistant === 'mx3' ? 'أنت MX3، مساعد برمجي داخل منصة MX1. أجب بدقة واشرح القيود.' : 'أنت MX2، مساعد Cloudflare وGitHub. قدّم اقتراحات آمنة ولا تنفذ تغييرات مدمرة.';
+  const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'system', content: system }, ...context, { role: 'user', content: userMessage }] });
   return result?.response || String(result ?? '');
 }
 async function handle(request, env) {
@@ -31,7 +41,7 @@ async function handle(request, env) {
   if (url.pathname === '/api/mx2/chat' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
     if (!safeText(body.message, 12000)) return json({ success: false, error: 'message is required' }, 422);
-    try { const response = await aiReply(body.message, env); if (!response) return json({ success: false, assistant: 'mx2', error: 'Workers AI binding is not configured' }, 503); return json({ success: true, assistant: 'mx2', response }); } catch (error) { return json({ success: false, error: error.message }, 502); }
+    try { const response = await aiReply(body.message, env, body.assistant === 'mx3' ? 'mx3' : 'mx2', body.history); if (!response) return json({ success: false, assistant: 'mx2', error: 'Workers AI binding is not configured' }, 503); return json({ success: true, assistant: 'mx2', response }); } catch (error) { return json({ success: false, error: error.message }, 502); }
   }
   if (url.pathname === '/api/webhook/ingress' && method === 'POST') {
     let payload; try { payload = await request.json(); } catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
@@ -59,7 +69,7 @@ async function handle(request, env) {
   if (url.pathname === '/api/github/generate' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
     if (!validatePath(body.path) || !safeText(body.prompt, 8000)) return json({ success: false, error: 'Valid path and prompt are required' }, 422);
-    const generated = await aiReply(`اكتب محتوى الملف ${body.path} بناءً على المتطلب التالي. أعد الكود فقط.\n${body.prompt}`, env);
+    const generated = await aiReply(`اكتب محتوى الملف ${body.path} بناءً على المتطلب التالي. أعد الكود فقط.\n${body.prompt}`, env, 'mx3');
     if (!generated) return json({ success: false, error: 'Workers AI binding is not configured' }, 503);
     return json({ success: true, path: body.path, code: generated.replace(/^```[a-zA-Z0-9_-]*\n|```$/g, '').trim(), validated: true, ready_to_push: false });
   }
