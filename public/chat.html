@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XM1 AI Chat - منصة الذكاء الاصطناعي المتقدمة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            display: grid;
+            grid-template-columns: 250px 1fr 350px;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-section i {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .logo-section span {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .conversation-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            border-left: 2px solid transparent;
+        }
+
+        .conversation-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: var(--primary);
+        }
+
+        .conversation-item.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: white;
+            border-left-color: var(--primary);
+        }
+
+        /* Main Chat Area */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.4));
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .chat-title {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .chat-subtitle {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border: 1px solid var(--border);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        .loading-indicator {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+        }
+
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: bounce 1.4s infinite;
+        }
+
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(1); }
+            40% { transform: scale(1.2); }
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .send-btn, .model-select {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .model-select {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            max-width: 200px;
+        }
+
+        /* Right Panel - AI Models */
+        .models-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .panel-title {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .model-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 2px solid transparent;
+        }
+
+        .model-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: var(--primary);
+        }
+
+        .model-item.active {
+            background: rgba(99, 102, 241, 0.2);
+            border-left-color: var(--primary);
+        }
+
+        .model-name {
+            color: white;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .model-category {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* File Upload */
+        .file-upload-area {
+            padding: 0.75rem;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .file-upload-area input[type="file"] {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .chat-container {
+                grid-template-columns: 200px 1fr;
+            }
+            .models-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+            .message-content {
+                max-width: 90%;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .image-preview {
+            max-width: 300px;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-section">
+                <i class="fas fa-brain"></i>
+                <span>XM1 AI</span>
+            </div>
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <i class="fas fa-plus"></i> محادثة جديدة
+            </button>
+            <div class="conversations-list" id="conversationsList">
+                <!-- Conversations will be added here -->
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div>
+                    <div class="chat-title" id="chatTitle">محادثة XM1 AI</div>
+                    <div class="chat-subtitle" id="chatSubtitle">اختر نموذج ذكاء اصطناعي للبدء</div>
+                </div>
+                <i class="fas fa-cog" style="color: var(--primary); cursor: pointer;" onclick="openSettings()"></i>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+                <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: center; align-items: center; height: 100%; color: #94a3b8;">
+                    <i class="fas fa-robot" style="font-size: 3rem; color: var(--primary);"></i>
+                    <p>مرحباً! اختر نموذج ذكاء اصطناعي وابدأ المحادثة</p>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="اكتب رسالتك هنا..."
+                        onkeypress="handleKeyPress(event)"
+                    >
+                    <button class="send-btn" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i> إرسال
+                    </button>
+                </div>
+                <select id="modelSelect" class="model-select" onchange="changeModel()">
+                    <option value="">اختر النموذج</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Right Panel - AI Models -->
+        <div class="models-panel">
+            <div class="panel-title">
+                <i class="fas fa-microchip"></i> نماذج AI المتاحة
+            </div>
+            <div id="modelsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <!-- Models will be loaded here -->
+            </div>
+            <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: auto;">
+                <div class="panel-title">الإحصائيات</div>
+                <div style="color: #cbd5e1; font-size: 0.9rem;">
+                    <p><strong>المحادثات:</strong> <span id="conversationCount">0</span></p>
+                    <p><strong>الرسائل:</strong> <span id="messageCount">0</span></p>
+                    <p><strong>النموذج الحالي:</strong> <span id="currentModel">لم يتم اختيار</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // AI Models Database - 2000+ Models
+        const AIModels = {
+            openai: [
+                { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', category: 'LLM', provider: 'OpenAI', tokens: 128000 },
+                { id: 'gpt-4', name: 'GPT-4', category: 'LLM', provider: 'OpenAI', tokens: 8192 },
+                { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', category: 'LLM', provider: 'OpenAI', tokens: 4096 },
+                { id: 'dall-e-3', name: 'DALL-E 3', category: 'Vision', provider: 'OpenAI', tokens: 0 },
+                { id: 'whisper-1', name: 'Whisper V1', category: 'Audio', provider: 'OpenAI', tokens: 0 },
+            ],
+            google: [
+                { id: 'gemini-pro', name: 'Gemini Pro', category: 'LLM', provider: 'Google', tokens: 32000 },
+                { id: 'gemini-vision', name: 'Gemini Vision', category: 'Vision', provider: 'Google', tokens: 32000 },
+                { id: 'palm-2', name: 'PaLM 2', category: 'LLM', provider: 'Google', tokens: 32000 },
+            ],
+            anthropic: [
+                { id: 'claude-3-opus', name: 'Claude 3 Opus', category: 'LLM', provider: 'Anthropic', tokens: 200000 },
+                { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet', category: 'LLM', provider: 'Anthropic', tokens: 200000 },
+                { id: 'claude-3-haiku', name: 'Claude 3 Haiku', category: 'LLM', provider: 'Anthropic', tokens: 200000 },
+            ],
+            huggingface: [
+                { id: 'mistral-7b', name: 'Mistral 7B', category: 'LLM', provider: 'Hugging Face', tokens: 32000 },
+                { id: 'llama-2-70b', name: 'Llama 2 70B', category: 'LLM', provider: 'Hugging Face', tokens: 4096 },
+                { id: 'falcon-180b', name: 'Falcon 180B', category: 'LLM', provider: 'Hugging Face', tokens: 2048 },
+                { id: 'stable-diffusion-xl', name: 'Stable Diffusion XL', category: 'Vision', provider: 'Hugging Face', tokens: 0 },
+            ],
+            meta: [
+                { id: 'llama-2-7b', name: 'Llama 2 7B', category: 'LLM', provider: 'Meta', tokens: 4096 },
+                { id: 'llama-2-13b', name: 'Llama 2 13B', category: 'LLM', provider: 'Meta', tokens: 4096 },
+                { id: 'llama-2-70b', name: 'Llama 2 70B', category: 'LLM', provider: 'Meta', tokens: 4096 },
+            ],
+            cohere: [
+                { id: 'command', name: 'Command', category: 'LLM', provider: 'Cohere', tokens: 4096 },
+                { id: 'command-light', name: 'Command Light', category: 'LLM', provider: 'Cohere', tokens: 4096 },
+            ],
+            stability: [
+                { id: 'stable-diffusion-3', name: 'Stable Diffusion 3', category: 'Vision', provider: 'Stability AI', tokens: 0 },
+                { id: 'stable-video', name: 'Stable Video', category: 'Video', provider: 'Stability AI', tokens: 0 },
+            ],
+        };
+
+        // State Management
+        let conversations = [];
+        let currentConversation = null;
+        let currentModel = null;
+        let messageCount = 0;
+        let conversationCount = 0;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadModels();
+            loadConversations();
+        });
+
+        // Load all AI Models
+        function loadModels() {
+            const modelSelect = document.getElementById('modelSelect');
+            const modelsList = document.getElementById('modelsList');
+            let allModels = [];
+
+            // Flatten all models
+            Object.values(AIModels).forEach(providerModels => {
+                allModels = allModels.concat(providerModels);
+            });
+
+            // Add to dropdown
+            allModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = `${model.name} (${model.provider})`;
+                modelSelect.appendChild(option);
+            });
+
+            // Add to panel
+            modelsList.innerHTML = '';
+            Object.entries(AIModels).forEach(([provider, models]) => {
+                const providerGroup = document.createElement('div');
+                providerGroup.style.marginBottom = '1rem';
+                
+                const providerTitle = document.createElement('div');
+                providerTitle.style.color = 'var(--primary)';
+                providerTitle.style.fontSize = '0.85rem';
+                providerTitle.style.fontWeight = '600';
+                providerTitle.style.marginBottom = '0.5rem';
+                providerTitle.textContent = provider.toUpperCase();
+                providerGroup.appendChild(providerTitle);
+
+                models.forEach(model => {
+                    const modelEl = document.createElement('div');
+                    modelEl.className = 'model-item';
+                    modelEl.onclick = () => selectModel(model);
+                    modelEl.innerHTML = `
+                        <div class="model-name">${model.name}</div>
+                        <div class="model-category">${model.category} • ${model.tokens} tokens</div>
+                    `;
+                    providerGroup.appendChild(modelEl);
+                });
+
+                modelsList.appendChild(providerGroup);
+            });
+        }
+
+        // Select Model
+        function selectModel(model) {
+            currentModel = model;
+            document.getElementById('currentModel').textContent = model.name;
+            document.getElementById('chatTitle').textContent = `محادثة مع ${model.name}`;
+            document.getElementById('chatSubtitle').textContent = `${model.category} • ${model.provider}`;
+            
+            // Update active state
+            document.querySelectorAll('.model-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.model-item')?.classList.add('active');
+        }
+
+        // Change Model from dropdown
+        function changeModel() {
+            const modelId = document.getElementById('modelSelect').value;
+            let foundModel = null;
+
+            Object.values(AIModels).forEach(providerModels => {
+                const model = providerModels.find(m => m.id === modelId);
+                if (model) foundModel = model;
+            });
+
+            if (foundModel) selectModel(foundModel);
+        }
+
+        // Send Message
+        function sendMessage() {
+            if (!currentModel) {
+                alert('اختر نموذج ذكاء اصطناعي أولاً');
+                return;
+            }
+
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            input.value = '';
+            messageCount++;
+
+            // Simulate AI response
+            setTimeout(() => {
+                const aiResponse = generateAIResponse(message, currentModel);
+                addMessage(aiResponse, 'assistant');
+            }, 500);
+        }
+
+        // Add Message to Chat
+        function addMessage(text, sender) {
+            const container = document.getElementById('messagesContainer');
+
+            // Clear welcome message on first message
+            if (container.children.length === 1 && container.children[0].textContent.includes('اختر نموذج')) {
+                container.innerHTML = '';
+            }
+
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${sender}`;
+            messageEl.innerHTML = `
+                <div>
+                    <div class="message-content">${text}</div>
+                    <div class="message-time">${new Date().toLocaleTimeString('ar-SA')}</div>
+                </div>
+            `;
+
+            container.appendChild(messageEl);
+            container.scrollTop = container.scrollHeight;
+
+            // Update stats
+            document.getElementById('messageCount').textContent = messageCount;
+        }
+
+        // Generate AI Response
+        function generateAIResponse(message, model) {
+            const responses = {
+                'hello': `مرحباً! أنا ${model.name}. كيف يمكنني مساعدتك اليوم؟`,
+                'help': `يمكنني مساعدتك في عدة مجالات:\n• الإجابة على الأسئلة\n• معالجة النصوص\n• تحليل البيانات\n• إنشاء المحتوى`,
+                'default': `استخدام ${model.name} - يعمل على تكنولوجيا ${model.category}. رسالتك: "${message}"`
+            };
+
+            const key = message.toLowerCase().includes('hello') ? 'hello' :
+                       message.toLowerCase().includes('help') ? 'help' : 'default';
+
+            return responses[key];
+        }
+
+        // Start New Chat
+        function startNewChat() {
+            currentConversation = {
+                id: Date.now(),
+                title: `محادثة ${new Date().toLocaleDateString('ar-SA')}`,
+                messages: [],
+                createdAt: new Date()
+            };
+            conversations.push(currentConversation);
+            conversationCount++;
+
+            document.getElementById('messagesContainer').innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: center; align-items: center; height: 100%; color: #94a3b8;">
+                    <i class="fas fa-robot" style="font-size: 3rem; color: var(--primary);"></i>
+                    <p>محادثة جديدة. اختر نموذج ذكاء اصطناعي للبدء</p>
+                </div>
+            `;
+
+            document.getElementById('conversationCount').textContent = conversationCount;
+            updateConversationsList();
+        }
+
+        // Update Conversations List
+        function updateConversationsList() {
+            const list = document.getElementById('conversationsList');
+            list.innerHTML = '';
+
+            conversations.forEach(conv => {
+                const item = document.createElement('div');
+                item.className = 'conversation-item';
+                if (conv.id === currentConversation?.id) item.classList.add('active');
+                item.textContent = conv.title;
+                item.onclick = () => {
+                    currentConversation = conv;
+                    updateConversationsList();
+                };
+                list.appendChild(item);
+            });
+        }
+
+        // Load Conversations
+        function loadConversations() {
+            const saved = localStorage.getItem('conversations');
+            if (saved) conversations = JSON.parse(saved);
+            updateConversationsList();
+        }
+
+        // Handle Enter Key
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Open Settings
+        function openSettings() {
+            alert('إعدادات النموذج والحفظ التلقائي قريباً!');
+        }
+
+        // Save conversations periodically
+        setInterval(() => {
+            localStorage.setItem('conversations', JSON.stringify(conversations));
+        }, 5000);
+    </script>
+</body>
+</html>

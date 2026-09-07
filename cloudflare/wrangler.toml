@@ -15,7 +15,7 @@ GEMINI_MODEL = "gemini-2.5-flash"
 binding = "AI"
 
 [assets]
-directory = ".."
+directory = "../public"
 binding = "ASSETS"
 
 [[kv_namespaces]]
@@ -39,6 +39,3 @@ database_id = "d06aaa8f-e765-4d37-9334-f614c5dec85e"
 # database_name = "mx1-database"
 # database_id = "..."
 
-[assets]
-directory = "../public"
-binding = "ASSETS"
