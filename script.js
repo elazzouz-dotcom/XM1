@@ -120,3 +120,19 @@ mobileNavBtn?.addEventListener('click', () => {
     sidebar?.classList.toggle('mobile-open');
 });
 document.querySelectorAll('.nav-item').forEach(link => link.addEventListener('click', () => sidebar?.classList.remove('mobile-open')));
+
+
+// تنقل MX1 على نمط مساحة عمل: لوحة واحدة نشطة في كل مرة
+const workspaceSections = Array.from(document.querySelectorAll('.main-content>.section-card'));
+const workspaceLinks = Array.from(document.querySelectorAll('.nav-item'));
+function activateWorkspacePanel(id) {
+    const target = document.getElementById(id) || document.getElementById('xm2-section');
+    workspaceSections.forEach(section => section.classList.toggle('panel-active', section === target));
+    workspaceLinks.forEach(link => link.classList.toggle('panel-selected', link.getAttribute('href') === `#${target.id}`));
+    if (history.replaceState) history.replaceState(null, '', `#${target.id}`);
+}
+workspaceLinks.forEach(link => link.addEventListener('click', event => {
+    const id = link.getAttribute('href')?.slice(1);
+    if (id && document.getElementById(id)) { event.preventDefault(); activateWorkspacePanel(id); }
+}));
+activateWorkspacePanel(location.hash ? location.hash.slice(1) : 'xm2-section');
