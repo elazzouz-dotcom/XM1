@@ -18,6 +18,16 @@ function tasksFor(requirement) {
     { id: crypto.randomUUID(), type: 'review', title: 'مراجعة قبل الدمج', status: 'planned' }
   ];
 }
+async function geminiReply(message, env, history = []) {
+  if (!env.GEMINI_API_KEY) return null;
+  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const contents = [...(Array.isArray(history) ? history.slice(-10) : []), { role: 'user', parts: [{ text: safeText(message) }] }].map(item => ({ role: item.role === 'assistant' ? 'model' : 'user', parts: [{ text: safeText(item.content || item.parts?.[0]?.text, 8000) }] }));
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+  const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ contents, generationConfig: { temperature: 0.4 } }) });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data?.error?.message || `Gemini HTTP ${response.status}`);
+  return data?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('') || '';
+}
 async function aiReply(message, env, assistant = 'mx2', history = []) {
   const userMessage = safeText(message);
   const context = Array.isArray(history) ? history.slice(-10).map(item => ({ role: item.role === 'assistant' ? 'assistant' : 'user', content: safeText(item.content, 8000) })) : [];
@@ -38,6 +48,16 @@ async function handle(request, env) {
   const url = new URL(request.url); const method = request.method;
   if (url.pathname === '/api/status' && method === 'GET') return json({ status: 'online', platform: 'mx1', ai_assistant: 'mx2', capabilities: { ai: !!env.AI, assets: !!env.ASSETS, apps_kv: !!env.APPS, deployments_kv: !!env.DEPLOYMENTS }, timestamp: new Date().toISOString() });
   if (!authorized(request, env)) return json({ success: false, error: 'Unauthorized' }, 401, { 'www-authenticate': 'Bearer' });
+  if (url.pathname === '/api/gateway' && method === 'POST') {
+    let body; try { body = await request.json(); } catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
+    const provider = body.provider === 'gemini' ? 'gemini' : 'cloudflare';
+    if (!safeText(body.message, 12000)) return json({ success: false, error: 'message is required' }, 422);
+    try {
+      const response = provider === 'gemini' ? await geminiReply(body.message, env, body.history) : await aiReply(body.message, env, 'mx2', body.history);
+      if (!response) return json({ success: false, provider, error: provider === 'gemini' ? 'Gemini is not configured' : 'Workers AI is not configured' }, 503);
+      return json({ success: true, provider, response });
+    } catch (error) { return json({ success: false, provider, error: error.message }, 502); }
+  }
   if (url.pathname === '/api/mx2/chat' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
     if (!safeText(body.message, 12000)) return json({ success: false, error: 'message is required' }, 422);

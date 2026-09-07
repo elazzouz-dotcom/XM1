@@ -75,3 +75,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => { openPanel('connectPanel'); document.getElementById('publishInput')?.focus(); }));
   document.getElementById('fullscreenBtn')?.addEventListener('click', async () => { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.(); else await document.exitFullscreen?.(); } catch {} });
 });
+
+
+const gatewayState = { provider: 'cloudflare', history: [] };
+document.querySelectorAll('.provider-tab').forEach(tab => tab.addEventListener('click', () => {
+  gatewayState.provider = tab.dataset.provider;
+  document.querySelectorAll('.provider-tab').forEach(item => item.classList.toggle('active', item === tab));
+}));
+document.getElementById('gatewaySend')?.addEventListener('click', async () => {
+  const input = document.getElementById('gatewayInput'); const result = document.getElementById('gatewayResult'); const message = input?.value.trim(); const base = apiBase();
+  if (!message) { if (result) result.textContent = 'اكتب طلبًا أولًا.'; return; }
+  if (!base) { if (result) result.textContent = 'أضف عنوان API من صفحة الاتصالات أولًا.'; return; }
+  if (result) result.textContent = 'جارٍ التوجيه عبر MX1 Gateway...';
+  try {
+    const response = await fetch(`${base}/api/gateway`, { method: 'POST', headers: { 'content-type': 'application/json', ...(apiToken() ? { authorization: `Bearer ${apiToken()}` } : {}) }, body: JSON.stringify({ provider: gatewayState.provider, message, history: gatewayState.history.slice(-10) }) });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    gatewayState.history.push({ role: 'user', content: message }, { role: 'assistant', content: data.response });
+    if (result) result.textContent = `${data.provider}: ${data.response}`;
+  } catch (error) { if (result) result.textContent = `فشل التوجيه: ${error.message}`; }
+});

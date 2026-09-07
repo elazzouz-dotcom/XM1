@@ -9,6 +9,7 @@ enabled = true
 PLATFORM_NAME = "mx1-integration-hub"
 AI_MODULE = "mx2"
 MX3_MODEL = "gpt-5-mini"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 [ai]
 binding = "AI"
