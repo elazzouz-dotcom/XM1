@@ -1,0 +1,26 @@
+name = "mx1"
+main = "src/index.js"
+compatibility_date = "2026-09-03"
+
+[observability]
+enabled = true
+
+[vars]
+PLATFORM_NAME = "mx1-integration-hub"
+AI_MODULE = "mx2"
+
+# أضف IDs الحقيقية بعد تفعيل الموارد في Cloudflare.
+# [[kv_namespaces]]
+# binding = "APPS"
+# id = "..."
+# [[kv_namespaces]]
+# binding = "DEPLOYMENTS"
+# id = "..."
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "mx1-database"
+# database_id = "..."
+
+[assets]
+directory = "../public"
+binding = "ASSETS"

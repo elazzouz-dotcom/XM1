@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const state = { assistant: 'cloudflare' };
+    const state = { assistant: 'cloudflare' }; // cloudflare = MX2, mx3 = المساعد الداخلي
     const xm2Feed = document.getElementById('xm2Feed');
     const xm2Input = document.getElementById('xm2Input');
     const xm2Send = document.getElementById('xm2Send');
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('click', () => {
             state.assistant = tab.dataset.assistant;
             document.querySelectorAll('.assistant-tab').forEach(item => item.classList.toggle('active', item === tab));
-            const label = state.assistant === 'cloudflare' ? 'مساعد Cloudflare' : 'MX2 — المساعد الداخلي';
+            const label = state.assistant === 'cloudflare' ? 'MX2 — مساعد Cloudflare' : 'MX3 — المساعد الداخلي';
             assistantStatus.innerHTML = `<span class="status-dot"></span> المسار المحدد: ${label}`;
             appendXm2(`تم التبديل إلى ${label}. اكتب رسالتك في هذا المسار.`, 'ai');
         });
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function appendXm2(text, sender) {
         const item = document.createElement('div');
         item.className = `feed-message ${sender}`;
-        item.innerHTML = sender === 'user' ? `<strong>أنت:</strong> ${escapeHtml(text)}` : `<strong>${state.assistant === 'cloudflare' ? 'مساعد Cloudflare' : 'MX2'}:</strong> ${text}`;
+        item.innerHTML = sender === 'user' ? `<strong>أنت:</strong> ${escapeHtml(text)}` : `<strong>${state.assistant === 'cloudflare' ? 'MX2 / Cloudflare' : 'MX3 / المساعد الداخلي'}:</strong> ${text}`;
         xm2Feed.appendChild(item);
         xm2Feed.scrollTop = xm2Feed.scrollHeight;
     }
@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (q.includes('github') || q.includes('مستودع')) return 'يمكن ربط مستودع GitHub بمسار النشر عبر workflow، مع إبقاء إعدادات الأسرار خارج الكود داخل Cloudflare Secrets.';
             return 'تم استلام رسالتك في مسار Cloudflare. هذا الإصدار يحافظ على الفصل بين واجهة XM2 والموصل الخارجي إلى أن يُضاف endpoint موثّق.';
         }
-        if (q.includes('كود') || q.includes('برمج') || q.includes('مشروع')) return 'أنا مسار MX2 الداخلي. أستطيع مساعدتك في تحليل بنية المشروع، صياغة التعديلات، وشرح خطوات التنفيذ داخل MX1.';
-        return 'تم استلام رسالتك في مسار MX2 الداخلي. اكتب الهدف أو الملف أو المشكلة التي تريد تحليلها وسأرتبها إلى خطوات عملية.';
+        if (q.includes('كود') || q.includes('برمج') || q.includes('مشروع')) return 'أنا مسار MX3 الداخلي. أستطيع مساعدتك في تحليل بنية المشروع، صياغة التعديلات، وشرح خطوات التنفيذ داخل MX1.';
+        return 'تم استلام رسالتك في مسار MX3 الداخلي. اكتب الهدف أو الملف أو المشكلة التي تريد تحليلها وسأرتبها إلى خطوات عملية.';
     }
 
     function sendXm2() {

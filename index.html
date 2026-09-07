@@ -14,7 +14,7 @@
         <div>
             <div class="sidebar-header"><h2><i class="fa-solid fa-cloud-bolt"></i> MX1</h2></div>
             <div class="nav-links">
-                <a href="#xm2-section" class="nav-item active"><i class="fa-solid fa-robot"></i> XM2 — الذكاء الاصطناعي</a>
+                <a href="#xm2-section" class="nav-item active"><i class="fa-solid fa-robot"></i> XM2 / MX3 — المساعدان</a>
                 <a href="#messages-section" class="nav-item"><i class="fa-solid fa-comments"></i> المراسلات والدردشة</a>
                 <a href="#ai-collab-section" class="nav-item"><i class="fa-solid fa-network-wired"></i> تواصل النماذج</a>
                 <a href="#social-section" class="nav-item"><i class="fa-solid fa-share-nodes"></i> المجتمع التقني</a>
@@ -27,20 +27,21 @@
     <main class="main-content">
         <header class="top-header">
             <div><h1>منصة MX1</h1><p class="subtitle">مساحة عمل موحّدة لـ GitHub وCloudflare والذكاء الاصطناعي</p></div>
-            <span class="badge">XM2 مفعّل</span>
+            <span class="badge">MX1 · XM2 · MX3</span>
         </header>
 
         <section id="xm2-section" class="section-card xm2-card">
-            <h3><i class="fa-solid fa-robot"></i> XM2 — مركز الذكاء الاصطناعي</h3>
-            <p class="section-note">اختر المساعد الذي تريد محادثته. يتم إبقاء مسار Cloudflare منفصلًا عن مسار MX2 الداخلي حتى لا تختلط التعليمات والسياقات.</p>
+            <h3><i class="fa-solid fa-robot"></i> XM2 / MX3 — مركز الذكاء الاصطناعي</h3>
+            <p class="section-note">MX2 هو مسار Cloudflare، وMX3 هو مسار المساعد الداخلي. يعمل كلاهما داخل MX1 مع سياق منفصل لكل مسار.</p>
             <div class="assistant-tabs" role="tablist">
                 <button class="assistant-tab active" data-assistant="cloudflare"><i class="fa-solid fa-cloud"></i> مساعد Cloudflare</button>
-                <button class="assistant-tab" data-assistant="mx2"><i class="fa-solid fa-brain"></i> MX2 — المساعد الداخلي</button>
+                <button class="assistant-tab" data-assistant="mx3"><i class="fa-solid fa-brain"></i> MX3 — المساعد الداخلي</button>
             </div>
-            <div class="assistant-status" id="assistantStatus"><span class="status-dot"></span> المسار المحدد: مساعد Cloudflare</div>
+            <div class="assistant-status" id="assistantStatus"><span class="status-dot"></span> المسار المحدد: MX2 — مساعد Cloudflare</div>
             <div id="xm2Feed" class="feed-box xm2-feed">
-                <div class="feed-message ai"><strong>مساعد Cloudflare:</strong> هذا مسار مستقل لمناقشة Workers وD1 وKV وR2 وإعدادات النشر.</div>
+                <div class="feed-message ai"><strong>MX2 / Cloudflare:</strong> هذا مسار مستقل لمناقشة Workers وD1 وKV وR2 وإعدادات النشر.</div>
             </div>
+            <div class="integration-strip"><span><i class="fa-solid fa-link"></i> طبقة MX1 للربط</span><span>API Token</span><span>Webhooks</span><span>GitHub</span></div>
             <div class="input-container">
                 <textarea id="xm2Input" placeholder="اكتب رسالتك إلى المساعد المحدد..."></textarea>
                 <button id="xm2Send" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
