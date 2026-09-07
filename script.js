@@ -54,15 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('xm2Input')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAssistantMessage(); } });
 
   document.getElementById('publishBtn')?.addEventListener('click', async () => {
-    const input = document.getElementById('publishInput'); const text = input?.value.trim(); const base = apiBase();
+    const input = document.getElementById('publishInput'); const text = input?.value.trim(); const base = apiBase(); const button = document.getElementById('publishBtn'); const notice = document.getElementById('uploadStatus');
+    if (publishType === 'image') { const file = document.getElementById('imageInput')?.files?.[0]; if (!file) { notice.textContent = 'اختر صورة أولًا.'; return; } if (!base) { notice.textContent = 'أضف عنوان API من الإعدادات أولًا.'; return; } button.disabled = true; notice.textContent = 'جارٍ رفع الصورة...'; try { const form = new FormData(); form.append('file', file, file.name); const response = await fetch(`${base}/api/assets/upload`, { method: 'POST', headers: apiToken() ? { authorization: `Bearer ${apiToken()}` } : {}, body: form }); const data = await response.json(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`); notice.innerHTML = `تم نشر الصورة: <a href="${base}${data.url}" target="_blank" rel="noopener">فتح الصورة</a>`; } catch (error) { notice.textContent = `تعذر نشر الصورة: ${error.message}`; } finally { button.disabled = false; } return; }
     if (!text) { input?.focus(); return; }
-    const button = document.getElementById('publishBtn'); button.disabled = true; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جارٍ النشر';
-    try {
-      if (!base) throw new Error('أضف عنوان API من الإعدادات أولًا');
-      const response = await fetch(`${base}/api/agent/execute`, { method:'POST', headers:{'content-type':'application/json', ...(apiToken()?{authorization:`Bearer ${apiToken()}`}:{})}, body:JSON.stringify({ requirement:text, auto_merge:false }) });
-      const data = await response.json(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
-      input.value = ''; alert(`تم إنشاء عملية النشر ${data.id || ''} في وضع المراجعة الآمنة.`);
-    } catch (error) { const notice = document.getElementById('uploadStatus'); if (notice) notice.textContent = `تعذر النشر عبر Worker: ${error.message}`; } finally { button.disabled = false; button.innerHTML = '<i class="fa-solid fa-arrow-up"></i> نشر'; }
+    button.disabled = true; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جارٍ النشر';
+    try { if (!base) throw new Error('أضف عنوان API من الإعدادات أولًا'); const response = await fetch(`${base}/api/agent/execute`, { method:'POST', headers:{'content-type':'application/json', ...(apiToken()?{authorization:`Bearer ${apiToken()}`}:{})}, body:JSON.stringify({ requirement:text, auto_merge:false, type: publishType }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`); input.value = ''; notice.textContent = `تم إنشاء عملية النشر ${data.id || ''} في وضع المراجعة الآمنة.`; } catch (error) { notice.textContent = `تعذر النشر عبر Worker: ${error.message}`; } finally { button.disabled = false; button.innerHTML = '<i class="fa-solid fa-arrow-up"></i> نشر'; }
   });
 
   const baseInput = document.getElementById('apiBaseInput'); const tokenInput = document.getElementById('apiTokenInput'); const status = document.getElementById('connectionStatus');
@@ -149,3 +145,14 @@ if (connectorList) {
   extraConnectorCatalog.forEach(([id]) => connectorList.querySelector(`[data-connector="${id}"] .connector-toggle`)?.addEventListener('click', () => { activeConnectors.has(id) ? activeConnectors.delete(id) : activeConnectors.add(id); localStorage.setItem('mx1_connectors', JSON.stringify([...activeConnectors])); renderConnectors(); }));
   renderConnectors();
 }
+
+
+// مساحة النشر متعددة الأنواع: نص، صورة، وموقع ZIP
+let publishType = 'text';
+document.getElementById('mx2HeaderBtn')?.addEventListener('click', () => openPanel('aiPanel'));
+document.querySelectorAll('.publish-type').forEach(tab => tab.addEventListener('click', () => {
+  publishType = tab.dataset.publishType; document.querySelectorAll('.publish-type').forEach(item => item.classList.toggle('active', item === tab));
+  const input = document.getElementById('publishInput'); const image = document.getElementById('imageInput'); const zip = document.getElementById('zipInput');
+  if (publishType === 'image') { input.placeholder = 'أضف وصفًا للصورة ثم اختر ملفًا...'; image?.click(); } else if (publishType === 'zip') { input.placeholder = 'أضف وصفًا للموقع ثم اختر ZIP...'; zip?.click(); } else input.placeholder = 'اكتب نصًا أو مقالًا للنشر...';
+}));
+document.getElementById('imageInput')?.addEventListener('change', () => { const file = document.getElementById('imageInput').files?.[0]; const preview = document.getElementById('publishPreview'); if (!file || !preview) return; const url = URL.createObjectURL(file); preview.innerHTML = `<img src="${url}" alt="معاينة الصورة" class="publish-image-preview"><span>${file.name}</span>`; });

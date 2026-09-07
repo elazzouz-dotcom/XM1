@@ -108,6 +108,12 @@ async function handle(request, env) {
     if (!generated) return json({ success: false, error: 'Workers AI binding is not configured' }, 503);
     return json({ success: true, path: body.path, code: generated.replace(/^```[a-zA-Z0-9_-]*\n|```$/g, '').trim(), validated: true, ready_to_push: false });
   }
+  if (url.pathname === '/api/assets/upload' && method === 'POST') {
+    if (!env.APPS) return json({ success: false, error: 'APPS KV binding is not configured' }, 503);
+    const form = await request.formData(); const file = form.get('file'); if (!file || typeof file.arrayBuffer !== 'function') return json({ success: false, error: 'Image file is required' }, 422); if (!String(file.type || '').startsWith('image/')) return json({ success: false, error: 'Only image files are supported' }, 415); if (file.size > 8 * 1024 * 1024) return json({ success: false, error: 'Image exceeds 8MB limit' }, 413);
+    const assetId = crypto.randomUUID(); const name = String(file.name || 'image').replace(/[^a-zA-Z0-9._-]/g, '-'); await env.APPS.put(`asset:${assetId}:${name}`, await file.arrayBuffer(), { expirationTtl: 604800 }); return json({ success: true, assetId, url: `/assets/${assetId}/${name}` });
+  }
+  if (url.pathname.startsWith('/assets/') && method === 'GET') { if (!env.APPS) return text('APPS KV binding is not configured', 503); const parts = url.pathname.split('/').filter(Boolean); const object = await env.APPS.get(`asset:${parts[1]}:${parts.slice(2).join('/')}`, { type: 'arrayBuffer' }); if (!object) return text('Not found', 404); const ext = parts[2]?.split('.').pop()?.toLowerCase(); const mime = { png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', webp:'image/webp', gif:'image/gif', svg:'image/svg+xml' }[ext] || 'application/octet-stream'; return new Response(object, { headers: { ...headers, 'content-type': mime, 'cache-control': 'public, max-age=3600' } }); }
   if (url.pathname === '/api/zip/upload' && method === 'POST') {
     if (!env.APPS) return json({ success: false, error: 'APPS KV binding is not configured' }, 503);
     const form = await request.formData(); const file = form.get('file'); if (!file || typeof file.arrayBuffer !== 'function') return json({ success: false, error: 'ZIP file is required' }, 422);
