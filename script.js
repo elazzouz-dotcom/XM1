@@ -215,3 +215,14 @@ function renderLocalPosts() { const feed = document.getElementById('postFeed'); 
 function captureLocalPost() { const active = document.querySelector('.publish-type.active'); const kind = active?.dataset.publishType || 'text'; const text = document.getElementById('publishInput')?.value.trim() || ''; const image = document.getElementById('imageInput')?.files?.[0]; const video = document.getElementById('videoInput')?.files?.[0]; const zip = document.getElementById('zipInput')?.files?.[0]; const file = kind === 'image' ? image : kind === 'video' ? video : kind === 'zip' ? zip : null; if (kind === 'text' && !text) return; if (kind !== 'text' && !file) return; const post = { id: Date.now(), kind: kind === 'zip' ? 'file' : kind, text, caption: text, name: file?.name || 'منشور نصي', author: localStorage.getItem('mx1_profile_name') || 'مالك مساحة MX1', time: new Date().toLocaleString('ar-MA', { dateStyle: 'short', timeStyle: 'short' }), url: file && (kind === 'image' || kind === 'video') ? URL.createObjectURL(file) : '' }; const posts = readLocalPosts(); posts.unshift(post); writeLocalPosts(posts); renderLocalPosts(); document.getElementById('homePanel')?.classList.add('composer-open'); }
 document.getElementById('publishBtn')?.addEventListener('click', () => window.setTimeout(captureLocalPost, 90));
 renderLocalPosts();
+
+// تنظيم Instagram التراكمي: تبويبات المنشورات، الإضافة، النشاط، والمشاركة
+const setGridFilter = filter => { document.querySelectorAll('.grid-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.gridFilter === filter)); document.querySelectorAll('#postFeed .social-post-card').forEach(card => { card.hidden = filter !== 'all' && !card.classList.contains(`${filter}-post-card`) && !(filter === 'file' && card.querySelector('.social-file')); }); };
+document.querySelectorAll('[data-grid-filter]').forEach(tab => tab.addEventListener('click', () => setGridFilter(tab.dataset.gridFilter)));
+document.getElementById('emptyPublishBtn')?.addEventListener('click', () => document.getElementById('openPublishBtn')?.click());
+document.getElementById('profileShareBtn')?.addEventListener('click', async () => { try { if (navigator.share) await navigator.share({ title:'MX1', text:'مساحة MX1', url:window.location.href }); else await navigator.clipboard.writeText(window.location.href); } catch {} });
+document.getElementById('publishOptionConnect')?.addEventListener('click', event => { event.stopImmediatePropagation(); document.getElementById('publishBackdrop')?.setAttribute('hidden',''); document.getElementById('connectorBtn')?.click(); }, true);
+const updatePostCount = () => { const count = document.querySelectorAll('#postFeed .social-post-card').length; const el = document.getElementById('postCount'); if (el) el.textContent = String(count); };
+const existingRenderLocalPosts = window.renderLocalPosts;
+if (typeof existingRenderLocalPosts === 'function') { existingRenderLocalPosts(); }
+updatePostCount();
