@@ -156,3 +156,9 @@ document.querySelectorAll('.publish-type').forEach(tab => tab.addEventListener('
   if (publishType === 'image') { input.placeholder = 'أضف وصفًا للصورة ثم اختر ملفًا...'; image?.click(); } else if (publishType === 'zip') { input.placeholder = 'أضف وصفًا للموقع ثم اختر ZIP...'; zip?.click(); } else input.placeholder = 'اكتب نصًا أو مقالًا للنشر...';
 }));
 document.getElementById('imageInput')?.addEventListener('change', () => { const file = document.getElementById('imageInput').files?.[0]; const preview = document.getElementById('publishPreview'); if (!file || !preview) return; const url = URL.createObjectURL(file); preview.innerHTML = `<img src="${url}" alt="معاينة الصورة" class="publish-image-preview"><span>${file.name}</span>`; });
+
+
+// روابط المتاجر الرسمية: فتح التطبيق أو صفحة البحث الرسمية دون ادعاء منح صلاحيات API
+function storeSearchUrl(store, name) { const q = encodeURIComponent(name); return store === 'ios' ? `https://apps.apple.com/us/search?term=${q}` : `https://play.google.com/store/search?q=${q}&c=apps`; }
+function addStoreLinks() { document.querySelectorAll('.connector-row').forEach(row => { if (row.querySelector('.connector-store-links')) return; const label = row.querySelector('strong')?.textContent || ''; const links = document.createElement('div'); links.className = 'connector-store-links'; links.innerHTML = `<a href="${storeSearchUrl('ios', label)}" target="_blank" rel="noopener">App Store</a><a href="${storeSearchUrl('android', label)}" target="_blank" rel="noopener">Google Play</a>`; row.appendChild(links); }); }
+addStoreLinks();

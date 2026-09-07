@@ -249,3 +249,5 @@ body {
 @media(max-width:700px){.header-action-button{min-width:78px;padding:0 10px;font-size:.72rem}.header-actions{gap:6px}.header-title h1{font-size:1.3rem}}
 
 #connectorBtn{width:118px;height:46px}.header-action-button#mx2HeaderBtn,.header-action-button#settingsBtn{min-width:104px}
+
+.connector-menu{width:min(760px,calc(100vw - 28px));max-height:82vh;padding:20px}.connector-list{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:8px}.connector-row{grid-template-columns:34px 1fr auto;grid-template-areas:'icon main toggle' 'icon stores stores';padding:13px;border:1px solid transparent}.connector-row>.app-icon{grid-area:icon}.connector-row>span{grid-area:main}.connector-row>.connector-toggle{grid-area:toggle}.connector-store-links{grid-area:stores;display:flex;gap:8px;margin-top:7px}.connector-store-links a{font-size:.66rem;color:var(--text-muted);border:1px solid var(--border-color);border-radius:6px;padding:4px 7px;text-decoration:none}.connector-store-links a:hover{color:var(--accent-color);border-color:var(--accent-color)}
