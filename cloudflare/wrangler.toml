@@ -10,6 +10,9 @@ PLATFORM_NAME = "mx1-integration-hub"
 AI_MODULE = "mx2"
 MX3_MODEL = "gpt-5-mini"
 GEMINI_MODEL = "gemini-2.5-flash"
+SUPABASE_URL = "https://tbiwgoklwgqrudjmflgb.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_lwzIuHxm3PYFb7CHCba9PA_xMp4oKHD"
+SUPABASE_JWKS_URL = "https://tbiwgoklwgqrudjmflgb.supabase.co/auth/v1/.well-known/jwks.json"
 
 [ai]
 binding = "AI"
