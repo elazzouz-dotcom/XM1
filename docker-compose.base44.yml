@@ -1,0 +1,13 @@
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./:/usr/share/nginx/html:ro
+      - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
