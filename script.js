@@ -272,3 +272,12 @@ updatePostCount();
   document.getElementById('connectorBtn')?.addEventListener('dblclick', () => { const menu = document.getElementById('connectorMenu'); if (menu) menu.hidden = true; showHubPanel(); renderHub(); });
   renderHub();
 })();
+
+// مزامنة عداد الموصلات مع لوحة الإعدادات الجديدة
+(() => {
+  const syncSettingsConnectorCount = () => { const target = document.getElementById('settingsConnectorCount'); if (target) { try { target.textContent = String(JSON.parse(localStorage.getItem('mx1_connectors') || '[]').length); } catch { target.textContent = '0'; } } };
+  syncSettingsConnectorCount();
+  window.addEventListener('storage', syncSettingsConnectorCount);
+  document.getElementById('settingsBtn')?.addEventListener('click', syncSettingsConnectorCount);
+  document.getElementById('connectorBtn')?.addEventListener('click', syncSettingsConnectorCount);
+})();
