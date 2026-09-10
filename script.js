@@ -281,3 +281,25 @@ updatePostCount();
   document.getElementById('settingsBtn')?.addEventListener('click', syncSettingsConnectorCount);
   document.getElementById('connectorBtn')?.addEventListener('click', syncSettingsConnectorCount);
 })();
+
+
+// وظائف UX الإضافية: قصص، نشاط، أزرار المنشورات، وسياق المساعدين
+(() => {
+  const postFeed = document.getElementById('postFeed');
+  const updateActivityBadge = () => { const badge = document.getElementById('activityBadge'); const count = Number(localStorage.getItem('mx1_activity_unread') || 0); if (badge) { badge.textContent = String(count); badge.hidden = !count; } };
+  const markActivity = () => { localStorage.setItem('mx1_activity_unread', '1'); updateActivityBadge(); };
+  updateActivityBadge();
+  document.getElementById('createStoryBtn')?.addEventListener('click', () => document.getElementById('openPublishBtn')?.click());
+  document.getElementById('publishBtn')?.addEventListener('click', () => window.setTimeout(markActivity, 180));
+  document.querySelector('.activity-tab')?.addEventListener('click', () => { localStorage.setItem('mx1_activity_unread', '0'); updateActivityBadge(); });
+  const enhancePosts = () => postFeed?.querySelectorAll('.social-post-card').forEach(card => {
+    const actions = card.querySelector('.social-post-actions'); if (!actions || actions.dataset.enhanced) return; actions.dataset.enhanced = 'true';
+    const save = document.createElement('button'); save.type = 'button'; save.innerHTML = '<i class="fa-regular fa-bookmark"></i> حفظ'; actions.appendChild(save);
+    actions.querySelectorAll('button').forEach(button => button.addEventListener('click', async () => { const label = button.textContent.trim(); if (label.includes('إعجاب')) { button.classList.toggle('liked'); button.querySelector('i')?.classList.toggle('fa-regular'); button.querySelector('i')?.classList.toggle('fa-solid'); } else if (label.includes('تعليق')) { document.getElementById('mx2HeaderBtn')?.click(); setTimeout(() => { const input = document.getElementById('xm2Input'); if (input) { input.value = 'أريد التعليق على هذا المنشور'; input.focus(); } }, 100); } else if (label.includes('مشاركة')) { try { if (navigator.share) await navigator.share({title:'MX1',text:'منشور من MX1',url:location.href}); else await navigator.clipboard.writeText(location.href); } catch {} } else if (label.includes('حفظ')) { button.classList.toggle('saved'); } }));
+  });
+  if (postFeed) new MutationObserver(enhancePosts).observe(postFeed, {childList:true,subtree:true}); enhancePosts();
+  document.getElementById('aiContextBtn')?.addEventListener('click', () => { const drawer = document.getElementById('aiContextDrawer'); if (drawer) drawer.hidden = !drawer.hidden; });
+  document.getElementById('aiShareBtn')?.addEventListener('click', async () => { try { if (navigator.share) await navigator.share({title:'MX1 AI Workspace',text:'محادثة MX2/MX3',url:location.href}); else await navigator.clipboard.writeText(location.href); } catch {} });
+  document.getElementById('aiExportBtn')?.addEventListener('click', () => { const text = [...document.querySelectorAll('#xm2Feed .feed-message')].map(item => item.innerText).join('\n\n'); const blob = new Blob([text || 'لا توجد رسائل بعد'], {type:'text/plain;charset=utf-8'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'mx1-ai-chat.txt'; link.click(); URL.revokeObjectURL(link.href); });
+  document.getElementById('automationRunBtn')?.addEventListener('click', () => { const trigger = document.getElementById('automationTrigger')?.value; const action = document.getElementById('automationAction')?.value; const status = document.getElementById('automationStatus'); if (status) { status.textContent = 'تم تشغيل التدفق محليًا: ' + trigger + ' → ' + action; status.style.color = '#86efac'; } localStorage.setItem('mx1_last_automation', JSON.stringify({trigger,action,time:new Date().toISOString()})); markActivity(); });
+})();
