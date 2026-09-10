@@ -327,3 +327,20 @@ updatePostCount();
     history.replaceState(null, '', '#homePanel');
   });
 })();
+
+
+// Google OAuth: كلمة المرور تبقى داخل Google ولا تمر عبر MX1
+(() => {
+  const AUTH_URL = 'https://tbiwgoklwgqrudjmflgb.supabase.co';
+  const AUTH_KEY = 'sb_publishable_lwzIuHxm3PYFb7CHCba9PA_xMp4oKHD';
+  const gate = document.getElementById('authGate'); const signIn = document.getElementById('googleSignInBtn'); const status = document.getElementById('authStatus'); const userSlot = document.getElementById('authUserSlot');
+  if (!gate || !signIn) return;
+  const setStatus = text => { if (status) status.textContent = text; };
+  const reveal = user => { gate.hidden = true; document.body.classList.add('mx1-authenticated'); if (userSlot && user) { const name = user.user_metadata?.full_name || user.email || 'حساب Google'; const avatar = user.user_metadata?.avatar_url; userSlot.innerHTML = `${avatar ? `<img src="${avatar}" alt="">` : ''}<span>${String(name).replace(/[&<>"']/g, '')}</span><button id="mx1LogoutBtn" type="button">خروج</button>`; document.getElementById('mx1LogoutBtn')?.addEventListener('click', async () => { await window.mx1Supabase?.auth.signOut(); location.reload(); }); } };
+  const showError = error => { setStatus(error?.message ? `تعذر تسجيل الدخول: ${error.message}` : 'تعذر تسجيل الدخول. حاول مرة أخرى.'); signIn.disabled = false; signIn.classList.remove('loading'); };
+  if (!window.supabase?.createClient) { setStatus('خدمة الدخول غير محملة. أعد تحميل الصفحة.'); return; }
+  const client = window.supabase.createClient(AUTH_URL, AUTH_KEY); window.mx1Supabase = client;
+  signIn.addEventListener('click', async () => { signIn.disabled = true; signIn.classList.add('loading'); setStatus('جارٍ فتح صفحة Google الآمنة...'); const { error } = await client.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: `${location.origin}${location.pathname}` } }); if (error) showError(error); });
+  client.auth.getSession().then(({data}) => { if (data.session?.user) reveal(data.session.user); else setStatus('تسجيل دخول آمن عبر Google OAuth'); }).catch(showError);
+  client.auth.onAuthStateChange((_event, session) => { if (session?.user) reveal(session.user); });
+})();
