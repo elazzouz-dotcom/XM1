@@ -226,3 +226,49 @@ const updatePostCount = () => { const count = document.querySelectorAll('#postFe
 const existingRenderLocalPosts = window.renderLocalPosts;
 if (typeof existingRenderLocalPosts === 'function') { existingRenderLocalPosts(); }
 updatePostCount();
+
+
+// مركز الموصلات المتقدم — إضافة تراكمية لا تستبدل القائمة القديمة
+(() => {
+  const hub = document.getElementById('connectorHubPanel');
+  const grid = document.getElementById('hubConnectorGrid');
+  if (!hub || !grid) return;
+  const baseCatalog = [
+    ['github','GitHub','المستودعات والملفات','fa-brands fa-github','devtools'],
+    ['gmail','Gmail','البريد والبحث','fa-solid fa-envelope','productivity'],
+    ['cloudflare','Cloudflare','Workers وD1 وKV','fa-solid fa-cloud','deploy'],
+    ['workers','Cloudflare Workers','النشر والـ bindings','fa-solid fa-cloud-arrow-up','deploy'],
+    ['firecrawl','Firecrawl','استخراج صفحات الويب','fa-solid fa-fire','devtools'],
+    ['clickhouse','ClickHouse','الاستعلامات والتحليلات','fa-solid fa-chart-column','database'],
+    ['cloudinary','Cloudinary','الصور والملفات','fa-solid fa-images','storage'],
+    ['cockroachdb','CockroachDB Cloud','قواعد البيانات','fa-solid fa-database','database'],
+    ['shopify','Shopify','المتجر والمنتجات','fa-brands fa-shopify','productivity']
+  ];
+  const domCatalog = [...document.querySelectorAll('.connector-row')].map(row => { const id = row.dataset.connector; const name = row.querySelector('strong')?.textContent || id; const description = row.querySelector('small')?.textContent || 'خدمة متصلة'; const icon = row.querySelector('.app-icon')?.className || 'fa-solid fa-plug'; const category = row.dataset.category || 'productivity'; return [id,name,description,icon,category]; }); const catalog = [...baseCatalog, ...domCatalog];
+  const uniqueCatalog = [...new Map(catalog.map(item => [item[0], item])).values()];
+  const hubActiveConnectors = new Set(JSON.parse(localStorage.getItem('mx1_connectors') || '[]'));
+  const showHubPanel = () => { document.querySelectorAll('.home-panel,.workspace-panel').forEach(panel => panel.classList.toggle('panel-active', panel.id === 'connectorHubPanel')); };
+  const safe = value => String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[character]));
+  const savedConfig = id => { try { return JSON.parse(localStorage.getItem(`mx1_connector_${id}`) || '{}'); } catch { return {}; } };
+  const renderHub = () => {
+    const query = (document.getElementById('hubConnectorSearch')?.value || '').trim().toLowerCase();
+    const filter = document.querySelector('.hub-filter.active')?.dataset.hubFilter || 'all';
+    const visible = uniqueCatalog.filter(([id,name,description,icon,category]) => (filter === 'all' || category === filter) && (`${name} ${description} ${id}`.toLowerCase().includes(query)));
+    grid.innerHTML = visible.map(([id,name,description,icon,category]) => {
+      const active = hubActiveConnectors.has(id); const config = savedConfig(id); const ready = Boolean(config.configured || active); const stateText = active ? 'متصل بسياق MX2 وMX3' : config.configured ? 'مهيأ — يحتاج تفعيل' : 'غير مهيأ';
+      return `<article class="hub-connector-card ${active ? 'connected' : ''}" data-hub-connector="${id}" data-category="${category}"><span class="hub-connector-icon"><i class="${icon}"></i></span><div><strong>${safe(name)}</strong><small>${safe(description)}</small></div><div class="hub-connector-actions"><button class="hub-configure" data-connector-id="${id}" title="إعداد ${safe(name)}"><i class="fa-solid fa-sliders"></i></button><button class="hub-toggle ${active ? 'primary' : ''}" data-connector-id="${id}">${active ? 'مفعّل' : 'تفعيل'}</button></div><div class="hub-connector-meta"><span class="hub-status-dot"></span><span>${stateText}</span>${ready ? '<span>·</span><span>حالة محفوظة</span>' : ''}</div></article>`;
+    }).join('') || '<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>لا توجد خدمة مطابقة</p><small>جرّب اسم التطبيق أو غيّر التصنيف.</small></div>';
+    const count = document.getElementById('hubConnectorCount'); if (count) count.textContent = String(hubActiveConnectors.size);
+    document.querySelectorAll('.hub-toggle').forEach(button => button.addEventListener('click', () => { const id = button.dataset.connectorId; if (!id) return; hubActiveConnectors.has(id) ? hubActiveConnectors.delete(id) : hubActiveConnectors.add(id); localStorage.setItem('mx1_connectors', JSON.stringify([...hubActiveConnectors])); renderHub(); }));
+    document.querySelectorAll('.hub-configure').forEach(button => button.addEventListener('click', () => document.querySelector(`.connector-row[data-connector="${button.dataset.connectorId}"] .connector-config-button`)?.click()));
+    document.querySelectorAll('.hub-test').forEach(button => button.addEventListener('click', async () => { const id = button.dataset.connectorId; const config = savedConfig(id); if (!config.endpoint) { button.textContent = 'أضف Endpoint أولًا'; setTimeout(() => { button.innerHTML = '<i class="fa-solid fa-plug-circle-check"></i>'; }, 1800); return; } button.disabled = true; try { const response = await fetch(`${config.endpoint.replace(/\/$/, '')}/api/status`); button.textContent = response.ok ? 'متصل' : `HTTP ${response.status}`; } catch { button.textContent = 'فشل'; } finally { setTimeout(() => { button.innerHTML = '<i class="fa-solid fa-plug-circle-check"></i>'; button.disabled = false; }, 1800); } }));
+  };
+  window.mx1RenderConnectorHub = renderHub;
+  const head = document.querySelector('.connector-menu-head');
+  if (head && !document.getElementById('openConnectorHubBtn')) { const button = document.createElement('button'); button.id = 'openConnectorHubBtn'; button.className = 'secondary-button'; button.style.height = '32px'; button.style.padding = '0 9px'; button.textContent = 'المركز'; button.addEventListener('click', () => { const menu = document.getElementById('connectorMenu'); if (menu) menu.hidden = true; showHubPanel(); renderHub(); }); head.appendChild(button); }
+  document.getElementById('hubConnectorSearch')?.addEventListener('input', renderHub);
+  document.querySelectorAll('.hub-filter').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.hub-filter').forEach(item => item.classList.toggle('active', item === button)); renderHub(); }));
+  document.getElementById('hubRefreshBtn')?.addEventListener('click', renderHub);
+  document.getElementById('connectorBtn')?.addEventListener('dblclick', () => { const menu = document.getElementById('connectorMenu'); if (menu) menu.hidden = true; showHubPanel(); renderHub(); });
+  renderHub();
+})();
