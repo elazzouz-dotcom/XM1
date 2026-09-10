@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   const state = { assistant: 'cloudflare', panel: 'homePanel', history: { cloudflare: [], mx3: [] } };
-  const panels = [...document.querySelectorAll('.home-panel,.workspace-panel')];
+  const panels = [...document.querySelectorAll('.interface-panel,.home-panel,.workspace-panel')];
   const defaultApiBase = () => window.location.hostname === 'xm1.elazzouz4.workers.dev' ? window.location.origin : '';
   const apiBase = () => (localStorage.getItem('mx1_api_base') || defaultApiBase()).replace(/\/$/, '');
   const apiToken = () => localStorage.getItem('mx1_api_token') || '';
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('settingsProfileBtn')?.addEventListener('click', () => openPanel('profilePanel'));
 
   const initial = location.hash?.slice(1);
-  openPanel(initial && document.getElementById(initial) ? initial : 'homePanel');
+  openPanel(initial && document.getElementById(initial) ? initial : 'interfacePanel');
 
   document.querySelectorAll('.assistant-tab').forEach(tab => tab.addEventListener('click', () => {
     state.assistant = tab.dataset.assistant;
@@ -316,4 +316,14 @@ updatePostCount();
 (() => {
   const openAiFromShortcut = () => document.querySelector('[data-open="aiPanel"]')?.click();
   document.getElementById('mx2HeaderBtn')?.addEventListener('click', openAiFromShortcut);
+})();
+
+
+// انتقال واضح من واجهة MX1 إلى مساحة الميزات
+(() => {
+  document.getElementById('openPlatformWorkspaceBtn')?.addEventListener('click', () => {
+    const target = document.getElementById('homePanel');
+    document.querySelectorAll('.interface-panel,.home-panel,.workspace-panel').forEach(panel => panel.classList.toggle('panel-active', panel === target));
+    history.replaceState(null, '', '#homePanel');
+  });
 })();
