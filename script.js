@@ -303,3 +303,17 @@ updatePostCount();
   document.getElementById('aiExportBtn')?.addEventListener('click', () => { const text = [...document.querySelectorAll('#xm2Feed .feed-message')].map(item => item.innerText).join('\n\n'); const blob = new Blob([text || 'لا توجد رسائل بعد'], {type:'text/plain;charset=utf-8'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'mx1-ai-chat.txt'; link.click(); URL.revokeObjectURL(link.href); });
   document.getElementById('automationRunBtn')?.addEventListener('click', () => { const trigger = document.getElementById('automationTrigger')?.value; const action = document.getElementById('automationAction')?.value; const status = document.getElementById('automationStatus'); if (status) { status.textContent = 'تم تشغيل التدفق محليًا: ' + trigger + ' → ' + action; status.style.color = '#86efac'; } localStorage.setItem('mx1_last_automation', JSON.stringify({trigger,action,time:new Date().toISOString()})); markActivity(); });
 })();
+
+
+// تحسينات التفاعل في مساحة MX2/MX3
+(() => {
+  document.querySelectorAll('[data-ai-prompt]').forEach(button => button.addEventListener('click', () => { const input = document.getElementById('xm2Input'); if (!input) return; input.value = button.dataset.aiPrompt || ''; input.focus(); }));
+  document.getElementById('newAiChatBtn')?.addEventListener('click', () => { const feed = document.getElementById('xm2Feed'); if (feed) feed.innerHTML = '<div class="feed-message ai"><strong>MX2:</strong> بدأت محادثة جديدة. ما الذي تريد إنجازه؟</div>'; const input = document.getElementById('xm2Input'); if (input) { input.value = ''; input.focus(); } });
+})();
+
+
+// ضمان فتح مساحة MX2 من زر الرأس ومن بطاقات الوصول السريع
+(() => {
+  const openAiFromShortcut = () => document.querySelector('[data-open="aiPanel"]')?.click();
+  document.getElementById('mx2HeaderBtn')?.addEventListener('click', openAiFromShortcut);
+})();
