@@ -24,11 +24,12 @@
 #    See the documentation for each action used below for the recommended IAM policies for this IAM user,
 #    and best practices on handling the access key credentials.
 
+# This workflow is a template: it is disabled from running automatically until the
+# AWS resources below, an ECS task definition file, and a Dockerfile exist in this repo.
 name: Deploy to Amazon ECS
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 env:
   AWS_REGION: MY_AWS_REGION                   # set this to your preferred AWS region, e.g. us-west-1
