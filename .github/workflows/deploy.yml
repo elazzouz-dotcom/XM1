@@ -4,9 +4,7 @@ on:
     branches: [main]
     paths:
       - 'cloudflare/**'
-      - 'index.html'
-      - 'script.js'
-      - 'styles.css'
+      - 'public/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 permissions:
