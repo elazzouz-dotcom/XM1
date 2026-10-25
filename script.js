@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const state = { assistant: 'cloudflare', panel: 'homePanel', history: { cloudflare: [], mx3: [] } };
   const panels = [...document.querySelectorAll('.interface-panel,.home-panel,.workspace-panel')];
-  const defaultApiBase = () => window.location.hostname === 'xm1.elazzouz4.workers.dev' ? window.location.origin : '';
+  const defaultApiBase = () => 'https://xm1.elazzouz4.workers.dev';
   const apiBase = () => (localStorage.getItem('mx1_api_base') || defaultApiBase()).replace(/\/$/, '');
   const apiToken = () => localStorage.getItem('mx1_api_token') || '';
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -326,4 +326,50 @@ updatePostCount();
     document.querySelectorAll('.interface-panel,.home-panel,.workspace-panel').forEach(panel => panel.classList.toggle('panel-active', panel === target));
     history.replaceState(null, '', '#homePanel');
   });
+})();
+
+// اتصال الرسائل والبيانات المباشر عبر Cloudflare Worker
+(() => {
+  const card = document.getElementById('workerDataCard');
+  if (!card) return;
+  const base = () => (localStorage.getItem('mx1_api_base') || 'https://xm1.elazzouz4.workers.dev').replace(/\/$/, '');
+  const token = () => localStorage.getItem('mx1_api_token') || '';
+  const state = document.getElementById('workerLinkState');
+  const type = document.getElementById('workerPayloadType');
+  const keyWrap = document.getElementById('workerDataKeyWrap');
+  const key = document.getElementById('workerDataKey');
+  const input = document.getElementById('workerPayloadInput');
+  const send = document.getElementById('workerSendBtn');
+  const notice = document.getElementById('workerDataNotice');
+  const feed = document.getElementById('workerDataFeed');
+  const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const headers = () => ({ 'content-type': 'application/json', ...(token() ? { authorization: `Bearer ${token()}` } : {}) });
+  const setState = (text, online = false) => { if (state) state.innerHTML = `<i class="fa-solid fa-circle"></i> ${safe(text)}`; state?.classList.toggle('online', online); };
+  const render = records => {
+    if (!feed) return;
+    if (!records?.length) { feed.innerHTML = '<span class="worker-empty">لا توجد رسائل أو بيانات بعد.</span>'; return; }
+    feed.innerHTML = records.slice(0, 30).map(record => `<article class="worker-record"><div><strong>${record.type === 'data' ? 'بيانات' : 'رسالة'}</strong><small>${safe(new Date(record.created_at || Date.now()).toLocaleString('ar'))}</small></div><p>${record.type === 'data' ? `<b>${safe(record.key || 'بدون مفتاح')}</b> — ${safe(JSON.stringify(record.value))}` : safe(record.message)}</p></article>`).join('');
+  };
+  async function request(path, options = {}) {
+    const response = await fetch(`${base()}${path}`, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    return data;
+  }
+  async function refresh() {
+    try { const [status, messages, records] = await Promise.all([request('/api/status'), request('/api/messages?limit=30'), request('/api/data?limit=30')]); setState(`متصل — ${status.platform || 'Cloudflare Worker'}`, true); render([...(messages.messages || []), ...(records.records || [])].sort((a,b) => String(b.created_at).localeCompare(String(a.created_at)))); }
+    catch (error) { setState('غير متصل'); if (notice) notice.textContent = `تعذر الاتصال بـ Cloudflare Worker: ${error.message}`; }
+  }
+  type?.addEventListener('change', () => { if (keyWrap) keyWrap.hidden = type.value !== 'data'; if (input) input.placeholder = type.value === 'data' ? '{"temperature": 24, "status": "ok"}' : 'اكتب الرسالة التي تريد إرسالها...'; });
+  send?.addEventListener('click', async () => {
+    const value = input?.value.trim(); if (!value) { if (notice) notice.textContent = 'اكتب محتوى أولًا.'; return; }
+    send.disabled = true; if (notice) notice.textContent = 'جارٍ الإرسال إلى Cloudflare Worker...';
+    try {
+      let data;
+      if (type?.value === 'data') { let parsed; try { parsed = JSON.parse(value); } catch { throw new Error('بيانات JSON غير صالحة'); } if (!key?.value.trim()) throw new Error('أدخل مفتاح البيانات'); data = await request('/api/data', { method: 'POST', body: JSON.stringify({ key: key.value.trim(), value: parsed }) }); }
+      else data = await request('/api/messages', { method: 'POST', body: JSON.stringify({ message: value }) });
+      input.value = ''; if (notice) notice.textContent = 'تم الإرسال والحفظ عبر Cloudflare Worker.'; render([...(data.messages || []), ...(data.records || [])]); await refresh();
+    } catch (error) { if (notice) notice.textContent = `فشل الإرسال: ${error.message}`; } finally { send.disabled = false; }
+  });
+  refresh();
 })();

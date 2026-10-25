@@ -16,6 +16,16 @@ function cookieValue(request, name) { return (request.headers.get('cookie') || '
 function oauthConfig(provider, env) { return provider === 'google' ? { client: env.GOOGLE_CLIENT_ID, secret: env.GOOGLE_CLIENT_SECRET, auth: 'https://accounts.google.com/o/oauth2/v2/auth', token: 'https://oauth2.googleapis.com/token', scope: 'openid email profile' } : { client: env.GITHUB_CLIENT_ID, secret: env.GITHUB_CLIENT_SECRET, auth: 'https://github.com/login/oauth/authorize', token: 'https://github.com/login/oauth/access_token', scope: 'read:user user:email' }; }
 function cors(request) { return request.method === 'OPTIONS' ? new Response(null, { status: 204, headers }) : null; }
 function safeText(v, max = 12000) { return String(v ?? '').trim().slice(0, max); }
+async function readMessageList(env, limit = 30) {
+  if (!env.APPS) return [];
+  const rows = await env.APPS.get('mx1:messages', 'json');
+  return Array.isArray(rows) ? rows.slice(-limit).reverse() : [];
+}
+async function writeMessageList(env, rows) {
+  if (env.APPS) await env.APPS.put('mx1:messages', JSON.stringify(rows.slice(-200)));
+}
+function dataKey(value) { return safeText(value, 160).replace(/[^\w\u0600-\u06ff./:-]/g, '-').replace(/^[-.]+|[-.]+$/g, '') || 'default'; }
+
 function supabaseSettings(env) { return { url: env.SUPABASE_URL || '', publishableKey: env.SUPABASE_PUBLISHABLE_KEY || '', jwksUrl: env.SUPABASE_JWKS_URL || '' }; }
 async function supabaseUser(request, env) { const settings = supabaseSettings(env); const authorization = request.headers.get('authorization') || ''; if (!settings.url || !settings.publishableKey || !authorization.startsWith('Bearer ')) return null; try { const response = await fetch(`${settings.url.replace(/\/$/, '')}/auth/v1/user`, { headers: { authorization, apikey: settings.publishableKey } }); if (!response.ok) return null; const user = await response.json(); return user?.id ? user : null; } catch { return null; } }
 function validatePath(path) { return path && !path.startsWith('/') && !path.includes('..') && !path.includes('\\') && path.length < 240; }
@@ -68,6 +78,39 @@ async function handle(request, env) {
   if (authCallback && method === 'GET') { const provider = authCallback[1]; const cfg = oauthConfig(provider, env); const state = url.searchParams.get('state'); const code = url.searchParams.get('code'); if (!code || !state || state !== cookieValue(request, 'mx1_oauth_state')) return text('OAuth state validation failed', 400); const callback = `${url.origin}/api/auth/${provider}/callback`; const tokenResponse = await fetch(cfg.token, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ client_id: cfg.client, client_secret: cfg.secret, code, redirect_uri: callback }) }); const token = await tokenResponse.json(); if (!token.access_token) return json({ success: false, error: 'OAuth token exchange failed' }, 502); const profileResponse = await fetch(provider === 'google' ? 'https://openidconnect.googleapis.com/v1/userinfo' : 'https://api.github.com/user', { headers: { authorization: `Bearer ${token.access_token}`, accept: 'application/json', 'user-agent': 'MX1' } }); const p = await profileResponse.json(); const user = provider === 'google' ? { provider, id: p.sub, email: p.email, name: p.name, avatar: p.picture } : { provider, id: String(p.id), email: p.email, name: p.name || p.login, avatar: p.avatar_url }; const session = await signSession(user, env); return Response.redirect(`${url.origin}/#profilePanel`, 302, { 'set-cookie': [`mx1_session=${session}; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax`, 'mx1_oauth_state=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax'] }); }
   if (url.pathname === '/api/profile' && method === 'GET') { const user = await readSession(request, env); if (!user) return json({ success: false, error: 'Unauthorized' }, 401); const saved = env.APPS ? await env.APPS.get(`profile:${user.provider}:${user.id}`, 'json') : null; return json({ success: true, profile: { ...user, ...saved } }); }
   if (url.pathname === '/api/profile' && method === 'POST') { const user = await readSession(request, env); if (!user) return json({ success: false, error: 'Unauthorized' }, 401); if (!env.APPS) return json({ success: false, error: 'APPS KV binding is not configured' }, 503); const body = await request.json(); const profile = { name: safeText(body.name, 120), avatar: safeText(body.avatar, 2000) }; await env.APPS.put(`profile:${user.provider}:${user.id}`, JSON.stringify(profile)); return json({ success: true, profile: { ...user, ...profile } }); }
+
+  // Direct messaging and data channel for the MX1 UI. Uses the existing APPS KV binding.
+  if (url.pathname === '/api/messages' && method === 'GET') {
+    const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 30), 1), 100);
+    if (!env.APPS) return json({ success: false, error: 'APPS KV binding is not configured' }, 503);
+    return json({ success: true, messages: await readMessageList(env, limit) });
+  }
+  if (url.pathname === '/api/messages' && method === 'POST') {
+    if (!env.APPS) return json({ success: false, error: 'APPS KV binding is not configured' }, 503);
+    let body; try { body = await request.json(); } catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
+    const message = safeText(body.message, 4000);
+    if (!message) return json({ success: false, error: 'message is required' }, 422);
+    const rows = await readMessageList(env, 200);
+    const record = { id: crypto.randomUUID(), type: 'message', message, channel: safeText(body.channel, 80) || 'general', created_at: new Date().toISOString() };
+    rows.unshift(record); await writeMessageList(env, rows);
+    return json({ success: true, record, messages: [record, ...rows.slice(1, 30)] });
+  }
+  if (url.pathname === '/api/data' && method === 'GET') {
+    if (!env.APPS) return json({ success: false, error: 'APPS KV binding is not configured' }, 503);
+    const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 30), 1), 100);
+    const listed = await env.APPS.list({ prefix: 'mx1:data:', limit });
+    const records = (await Promise.all(listed.keys.map(async item => { const value = await env.APPS.get(item.name, 'json'); return value ? { ...value, key: item.name.slice('mx1:data:'.length) } : null; }))).filter(Boolean).sort((a,b) => String(b.created_at).localeCompare(String(a.created_at)));
+    return json({ success: true, records });
+  }
+  if (url.pathname === '/api/data' && method === 'POST') {
+    if (!env.APPS) return json({ success: false, error: 'APPS KV binding is not configured' }, 503);
+    let body; try { body = await request.json(); } catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
+    if (!body || body.value === undefined) return json({ success: false, error: 'key and value are required' }, 422);
+    const key = dataKey(body.key);
+    const record = { id: crypto.randomUUID(), type: 'data', key, value: body.value, created_at: new Date().toISOString() };
+    await env.APPS.put(`mx1:data:${key}`, JSON.stringify(record));
+    return json({ success: true, record, records: [record] });
+  }
   if (!authorized(request, env)) return json({ success: false, error: 'Unauthorized' }, 401, { 'www-authenticate': 'Bearer' });
   if (url.pathname === '/api/gateway' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return json({ success: false, error: 'Invalid JSON' }, 400); }
