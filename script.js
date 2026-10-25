@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const state = { assistant: 'cloudflare', panel: 'homePanel', history: { cloudflare: [], mx3: [] } };
   const panels = [...document.querySelectorAll('.interface-panel,.home-panel,.workspace-panel')];
-  const defaultApiBase = () => 'https://xm1.elazzouz4.workers.dev';
+  const defaultApiBase = () => 'https://mx1.elazzouz4.workers.dev';
   const apiBase = () => (localStorage.getItem('mx1_api_base') || defaultApiBase()).replace(/\/$/, '');
   const apiToken = () => localStorage.getItem('mx1_api_token') || '';
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -332,7 +332,7 @@ updatePostCount();
 (() => {
   const card = document.getElementById('workerDataCard');
   if (!card) return;
-  const base = () => (localStorage.getItem('mx1_api_base') || 'https://xm1.elazzouz4.workers.dev').replace(/\/$/, '');
+  const base = () => (localStorage.getItem('mx1_api_base') || 'https://mx1.elazzouz4.workers.dev').replace(/\/$/, '');
   const token = () => localStorage.getItem('mx1_api_token') || '';
   const state = document.getElementById('workerLinkState');
   const type = document.getElementById('workerPayloadType');
